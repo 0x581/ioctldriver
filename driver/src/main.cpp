@@ -134,7 +134,7 @@ NTSTATUS driver_main(PDRIVER_OBJECT driver_object, PUNICODE_STRING registry_path
 	UNREFERENCED_PARAMETER(registry_path);
 
 	UNICODE_STRING device_name = {};
-	RtlInitUnicodeString(&device_name, L"\\Driver\\AssPileDriver");
+	RtlInitUnicodeString(&device_name, L"\\Device\\AssPileDriver");
 
 	PDEVICE_OBJECT device_object = nullptr;
 	NTSTATUS status = IoCreateDevice(driver_object, 0, &device_name, FILE_DEVICE_UNKNOWN,
