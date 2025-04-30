@@ -113,7 +113,7 @@ NTSTATUS driver_main(PDRIVER_OBJECT driver_object, PUNICODE_STRING registry_path
 	NTSTATUS status = IoCreateDevice(driver_object, 0, &device_name, FILE_DEVICE_UNKNOWN,
 										FILE_DEVICE_SECURE_OPEN, FALSE, &device_object);
 
-	if (status == STATUS_SUCCESS)
+	if (!NT_SUCCESS(status))
 	{
 		debug_print("[-] Failed to create driver device.\n");
 		return status;
@@ -125,7 +125,7 @@ NTSTATUS driver_main(PDRIVER_OBJECT driver_object, PUNICODE_STRING registry_path
 	RtlInitUnicodeString(&symbolic_link, L"\\DosDevices\\AssPileDriver");
 
 	status = IoCreateSymbolicLink(&symbolic_link, &device_name);
-	if (status == STATUS_SUCCESS) {
+	if (!NT_SUCCESS(status)) {
 		debug_print("[-] Failed to establish symbolic link\n");
 		return status;
 	}
