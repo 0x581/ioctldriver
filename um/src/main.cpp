@@ -90,12 +90,14 @@ namespace driver
         SIZE_T size;
         SIZE_T return_size;
     };
+
     bool attach_to_process(HANDLE driver_handle, const DWORD pid) {
         Request r;
         r.process_id = reinterpret_cast<HANDLE>(pid);
 
         return DeviceIoControl(driver_handle, codes::attach, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
     }
+
     template <class T>
     T read_memory(HANDLE driver_handle, const std::uintptr_t addr) {
         T temp = {};
@@ -110,7 +112,6 @@ namespace driver
         return temp;
     }
 
-
     template <class T> 
     void write_memory(HANDLE driver_handle, const std::uintptr_t addr, const T& value) {
         Request r;
@@ -120,13 +121,11 @@ namespace driver
 
         DeviceIoControl(driver_handle, codes::write, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
     }
-
-
 }
 
 int main()
 {
-    const DWORD pid = getPID(L"notepad.exe");
+    const DWORD pid = getPID(L"Notepad.exe");
 
     if (pid == 0) {
         std::cout << "Failed to find notepad.\n";
@@ -144,7 +143,7 @@ int main()
     }
 
 
-    if (driver::attach_to_process(driver, pid) == true)
+    if (driver::attach_to_process(driver, pid))
         std::cout << "Attachment successful.\n";
 
     CloseHandle(driver);
