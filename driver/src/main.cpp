@@ -1,5 +1,13 @@
 #include <ntifs.h>
 
+#ifndef DEBUG
+#define DEBUG
+#endif
+
+#ifdef DEBUG
+	#include <ntstrsafe.h>
+#endif
+
 extern "C" {
 	NTKERNELAPI NTSTATUS IoCreateDriver(PUNICODE_STRING DriverName,
 		PDRIVER_INITIALIZE InitializationFunction);
@@ -10,13 +18,26 @@ extern "C" {
 		PSIZE_T ReturnSize);
 }
 
-void debug_print(PCSTR text)
+void debug_print(PCSTR format, ...)
 {
 #ifndef DEBUG
-	UNREFERENCED_PARAMETER(text);
-#endif // DEBUG
+	UNREFERENCED_PARAMETER(format);
+#else
+	va_list args;
+	va_start(args, format);
 
-	KdPrintEx((DPFLTR_ENDOFTABLE_ID, DPFLTR_INFO_LEVEL, text));
+	char buffer[1024];
+
+	const auto ret = RtlStringCbVPrintfA(buffer, sizeof(buffer), format, args);
+
+	if (NT_SUCCESS(ret))
+		KdPrintEx((DPFLTR_IHVDRIVER_ID, DPFLTR_INFO_LEVEL, buffer));
+	else
+		KdPrintEx((DPFLTR_IHVDRIVER_ID, DPFLTR_INFO_LEVEL, "Error in debug_print: formatting failed\n"));
+
+	va_end(args);
+
+#endif // DEBUG
 }
 
 namespace driver {
@@ -41,6 +62,7 @@ namespace driver {
 		SIZE_T size;
 		SIZE_T return_size;
 	};
+
 	NTSTATUS create(PDEVICE_OBJECT device_object, PIRP irp) {
 		UNREFERENCED_PARAMETER(device_object);
 
@@ -48,6 +70,7 @@ namespace driver {
 
 		return irp->IoStatus.Status;
 	}
+
 	NTSTATUS close(PDEVICE_OBJECT device_object, PIRP irp) {
 		UNREFERENCED_PARAMETER(device_object);
 
@@ -55,6 +78,7 @@ namespace driver {
 
 		return irp->IoStatus.Status;
 	}
+
 	NTSTATUS device_control(PDEVICE_OBJECT device_object, PIRP irp) {
 		UNREFERENCED_PARAMETER(device_object);
 
@@ -70,8 +94,11 @@ namespace driver {
 			IoCompleteRequest(irp, IO_NO_INCREMENT);
 			return status;
 		}
+
 		static PEPROCESS target_process = nullptr;
+
 		const ULONG control_code = stack_irp->Parameters.DeviceIoControl.IoControlCode;
+
 		switch (control_code)
 		{
 		case codes::attach:
