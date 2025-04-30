@@ -119,7 +119,7 @@ NTSTATUS driver_main(PDRIVER_OBJECT driver_object, PUNICODE_STRING registry_path
 		return status;
 	}
 
-	debug_print("[+] Driver device succeffully created.\n");
+	debug_print("[+] Driver device successfully created.\n");
 
 	UNICODE_STRING symbolic_link = {};
 	RtlInitUnicodeString(&symbolic_link, L"\\DosDevices\\AssPileDriver");
@@ -130,8 +130,7 @@ NTSTATUS driver_main(PDRIVER_OBJECT driver_object, PUNICODE_STRING registry_path
 		return status;
 	}
 
-	debug_print("[+] Driver symbolic link successfully establish.\n");
-
+	debug_print("[+] Driver symbolic link successfully established.\n");
 	SetFlag(device_object->Flags, DO_BUFFERED_IO);
 
 	driver_object->MajorFunction[IRP_MJ_CREATE] = driver::create;
@@ -146,12 +145,10 @@ NTSTATUS driver_main(PDRIVER_OBJECT driver_object, PUNICODE_STRING registry_path
 }
 
 NTSTATUS DriverEntry() {
-	debug_print("[+] Hello from kernel!\n");
+	debug_print("[+] DriverEntry called. Initializing driver...\n");
 
 	UNICODE_STRING driver_name = {};
 	RtlInitUnicodeString(&driver_name, L"\\Driver\\AssPileDriver");
-
-
 
 	return IoCreateDriver(&driver_name, &driver_main);
 }
