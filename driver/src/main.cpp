@@ -101,23 +101,50 @@ namespace driver {
 
 		switch (control_code)
 		{
-		case codes::attach:
-			status = PsLookupProcessByProcessId(request->process_id, &target_process);
-			break;
-		case codes::read:
-			if (target_process == nullptr)
-				status = MmCopyVirtualMemory(target_process, request->target,
-					PsGetCurrentProcess(), request->buffer,
-					request->size, KernelMode, &request->return_size);
-			break;
-		case codes::write:
-			if (target_process == nullptr)
-				status = MmCopyVirtualMemory(PsGetCurrentProcess(), request->buffer,
-					target_process, request->target,
-					request->size, KernelMode, &request->return_size);
-			break;
-		default:
-			break;
+			case codes::attach:
+			{
+				const auto target_pid = request->process_id;
+				debug_print("[+] Attaching to process (%d).\n", target_pid);
+
+				status = PsLookupProcessByProcessId(target_pid, &target_process);
+				break;
+			}
+			case codes::read:
+			{
+				if (target_process != nullptr)
+				{
+					const auto target = request->target;
+					const auto size = request->size;
+					const auto buffer = request->buffer;
+					debug_print("[+] Reading %d bytes from %p to %p.\n", size, target, buffer);
+
+					status = MmCopyVirtualMemory(target_process, target,
+						PsGetCurrentProcess(), buffer,
+						size, KernelMode, &request->return_size);
+				}
+				else
+					debug_print("[-] Tried to read without being attached to a process.\n");
+				break;
+			}
+			case codes::write:
+			{
+				if (target_process != nullptr)
+				{
+					const auto target = request->target;
+					const auto size = request->size;
+					const auto buffer = request->buffer;
+					debug_print("[+] Writing %d bytes to %p from %p.\n", size, target, buffer);
+
+					status = MmCopyVirtualMemory(PsGetCurrentProcess(), buffer,
+						target_process, target,
+						size, KernelMode, &request->return_size);
+				}
+				else
+					debug_print("[-] Tried to write without being attached to a process.\n");
+				break;
+			}
+			default:
+				break;
 		}
 
 		irp->IoStatus.Status = status;
@@ -125,7 +152,7 @@ namespace driver {
 
 		IoCompleteRequest(irp, IO_NO_INCREMENT);
 
-		return irp->IoStatus.Status;
+		return status;
 	}
 }
 
