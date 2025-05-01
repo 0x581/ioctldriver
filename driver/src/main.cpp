@@ -86,71 +86,154 @@ namespace driver {
 		return irp->IoStatus.Status;
 	}
 
+	NTSTATUS unattach(PEPROCESS* target_process) {
+		if (DEBUG_UNATTACH)
+			debug_print("[+] Unattaching from process.\n");
+
+		if (!*target_process) {
+			if (DEBUG_UNATTACH)
+				debug_print("[-] Not attached to a process.\n");
+			return STATUS_INVALID_PARAMETER;
+		}
+
+		ObDereferenceObject(*target_process);
+		*target_process = nullptr;
+
+		if (DEBUG_UNATTACH)
+			debug_print("[+] Unattached from process.\n");
+
+		return STATUS_SUCCESS;
+	}
+
+	NTSTATUS target_is_alive(PEPROCESS target_process, PSIZE_T is_alive) {
+		if (DEBUG_TARGET_ALIVE)
+			debug_print("[+] Checking if target process is alive.\n");
+
+		if (!target_process) {
+			if (DEBUG_TARGET_ALIVE)
+				debug_print("[-] Not attached to a process.\n");
+			return STATUS_INVALID_PARAMETER;
+		}
+
+		NTSTATUS status = STATUS_SUCCESS;
+
+		// Check if the process is alive
+		//if (KeReadStateProcess(target_process)) {
+		//	if (DEBUG_TARGET_ALIVE)
+		//		debug_print("[-] Target process is dead.\n");
+		//	return STATUS_INVALID_PARAMETER;
+		//}
+
+		return status;
+	}
+
+	NTSTATUS attach(HANDLE pid, PEPROCESS* target_process) {
+		if (*target_process)
+			unattach(target_process);
+
+		if (DEBUG_ATTACH)
+			debug_print("[+] Attaching to process (%d).\n", pid);
+
+		NTSTATUS status = PsLookupProcessByProcessId(pid, target_process);
+
+		if (DEBUG_ATTACH)
+		{
+			if (!NT_SUCCESS(status))
+				debug_print("[-] Failed to attach to process (%d).\n", pid);
+			else
+				debug_print("[+] Attached to process (%d).\n", pid);
+		}
+
+		return status;
+	}
+
+	NTSTATUS read_memory(PVOID destination, PVOID source, SIZE_T size, PEPROCESS src_process, PSIZE_T return_size) {
+		if (DEBUG_READ)
+			debug_print("[+] Reading %d bytes from %p to %p.\n", size, source, destination);
+
+		if (!src_process) {
+			if (DEBUG_READ)
+				debug_print("[-] Not attached to a procss.\n");
+
+			return STATUS_INVALID_PARAMETER;
+		}
+
+		const auto status = MmCopyVirtualMemory(src_process, source, PsGetCurrentProcess(),
+												destination, size, KernelMode, return_size);
+
+		if (DEBUG_READ && !NT_SUCCESS(status))
+			debug_print("[-] Failed to read memory.\n");
+
+		return status;
+	}
+
+	NTSTATUS write_memory(PVOID destination, PVOID source, SIZE_T size, PEPROCESS dest_process, PSIZE_T return_size) {
+		if (DEBUG_WRITE)
+			debug_print("[+] Writing %d bytes from %p to %p.\n", size, source, destination);
+
+		if (!dest_process) {
+			if (DEBUG_READ)
+				debug_print("[-] Not attached to a procss.\n");
+
+			return STATUS_INVALID_PARAMETER;
+		}
+
+		const auto status = MmCopyVirtualMemory(PsGetCurrentProcess(), source, dest_process,
+			destination, size, KernelMode, return_size);
+
+		if (DEBUG_WRITE && !NT_SUCCESS(status))
+			debug_print("[-] Failed to write memory.\n");
+
+		return status;
+	}
+
+
 	NTSTATUS device_control(PDEVICE_OBJECT device_object, PIRP irp) {
 		UNREFERENCED_PARAMETER(device_object);
 
+		// This holds the process across calls to the driver.
+		static PEPROCESS target_process = nullptr;
+
+		if (DEBUG_DEV_CTRL)
 		debug_print("[+] Device control called.\n");
 
-		NTSTATUS status = STATUS_UNSUCCESSFUL;
-
+		// Get request packet from irp
 		PIO_STACK_LOCATION stack_irp = IoGetCurrentIrpStackLocation(irp);
 
-		auto request = reinterpret_cast<Request*>(irp->AssociatedIrp.SystemBuffer);
+		Request *request = reinterpret_cast<Request*>(irp->AssociatedIrp.SystemBuffer);
 
 		if (stack_irp == nullptr || request == nullptr) {
 			IoCompleteRequest(irp, IO_NO_INCREMENT);
-			return status;
+			return STATUS_UNSUCCESSFUL;
 		}
 
-		static PEPROCESS target_process = nullptr;
+		// --------------------------------------------------------------------------------
+		NTSTATUS status = STATUS_UNSUCCESSFUL;
 
-		const ULONG control_code = stack_irp->Parameters.DeviceIoControl.IoControlCode;
+		const auto control_code = stack_irp->Parameters.DeviceIoControl.IoControlCode;
 
 		switch (control_code)
 		{
 			case codes::attach:
-			{
-				const auto target_pid = request->process_id;
-				debug_print("[+] Attaching to process (%d).\n", target_pid);
-
-				status = PsLookupProcessByProcessId(target_pid, &target_process);
+				status = attach(request->process_id, &target_process);
 				break;
-			}
+			case codes::unattach:
+				status = unattach(&target_process);
+				break;
+			case codes::target_is_alive:
+				status = target_is_alive(target_process, &(request->return_value));
+				break;
 			case codes::read:
-			{
-				if (target_process != nullptr)
-				{
-					const auto target = request->target;
-					const auto size = request->size;
-					const auto buffer = request->buffer;
-					debug_print("[+] Reading %d bytes from %p to %p.\n", size, target, buffer);
-
-					status = MmCopyVirtualMemory(target_process, target,
-						PsGetCurrentProcess(), buffer,
-						size, KernelMode, &request->return_size);
-				}
-				else
-					debug_print("[-] Tried to read without being attached to a process.\n");
+				status = read_memory(request->buffer, request->target, request->size,
+									 target_process, &request->return_size);
 				break;
-			}
 			case codes::write:
-			{
-				if (target_process != nullptr)
-				{
-					const auto target = request->target;
-					const auto size = request->size;
-					const auto buffer = request->buffer;
-					debug_print("[+] Writing %d bytes to %p from %p.\n", size, target, buffer);
-
-					status = MmCopyVirtualMemory(PsGetCurrentProcess(), buffer,
-						target_process, target,
-						size, KernelMode, &request->return_size);
-				}
-				else
-					debug_print("[-] Tried to write without being attached to a process.\n");
+				status = write_memory(request->target, request->buffer, request->size,
+									  target_process, &request->return_size);
 				break;
-			}
 			default:
+				if (DEBUG_DEV_CTRL)
+					debug_print("[-] Unknown control code: %x\n", control_code);
 				break;
 		}
 
