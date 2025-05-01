@@ -1,3 +1,7 @@
+#pragma once
+
+#include "driver_defines.hpp"
+
 #include <ntifs.h>
 
 #ifndef DEBUG
@@ -7,6 +11,30 @@
 #ifdef DEBUG
 	#include <ntstrsafe.h>
 #endif
+
+constexpr auto DEBUG_FLAG_DEV_CTRL = 0x1 << 0;
+constexpr auto DEBUG_FLAG_ATTACH = 0x1 << 1;
+constexpr auto DEBUG_FLAG_UNATTACH = 0x1 << 2;
+constexpr auto DEBUG_FLAG_TARGET_ALIVE = 0x1 << 3;
+constexpr auto DEBUG_FLAG_READ = 0x1 << 10;
+constexpr auto DEBUG_FLAG_WRITE = 0x1 << 11;
+
+constexpr auto DEBUG_FLAGS = (
+	0x0
+	| DEBUG_FLAG_DEV_CTRL
+	| DEBUG_FLAG_ATTACH
+	| DEBUG_FLAG_UNATTACH
+	| DEBUG_FLAG_TARGET_ALIVE
+	| DEBUG_FLAG_READ
+	| DEBUG_FLAG_WRITE
+);
+
+constexpr auto DEBUG_DEV_CTRL = DEBUG_FLAGS & DEBUG_FLAG_DEV_CTRL;
+constexpr auto DEBUG_ATTACH = DEBUG_FLAGS & DEBUG_FLAG_ATTACH;
+constexpr auto DEBUG_UNATTACH = DEBUG_FLAGS & DEBUG_FLAG_UNATTACH;
+constexpr auto DEBUG_TARGET_ALIVE = DEBUG_FLAGS & DEBUG_FLAG_TARGET_ALIVE;
+constexpr auto DEBUG_READ = DEBUG_FLAGS & DEBUG_FLAG_READ;
+constexpr auto DEBUG_WRITE = DEBUG_FLAGS & DEBUG_FLAG_WRITE;
 
 extern "C" {
 	NTKERNELAPI NTSTATUS IoCreateDriver(PUNICODE_STRING DriverName,
@@ -41,27 +69,6 @@ void debug_print(PCSTR format, ...)
 }
 
 namespace driver {
-	namespace codes {
-		constexpr ULONG attach =
-			CTL_CODE(FILE_DEVICE_UNKNOWN, 0x696, METHOD_BUFFERED, FILE_SPECIAL_ACCESS);
-
-		constexpr ULONG read =
-			CTL_CODE(FILE_DEVICE_UNKNOWN, 0x697, METHOD_BUFFERED, FILE_SPECIAL_ACCESS);
-
-		constexpr ULONG write =
-			CTL_CODE(FILE_DEVICE_UNKNOWN, 0x698, METHOD_BUFFERED, FILE_SPECIAL_ACCESS);
-	}
-
-	struct Request
-	{
-		HANDLE process_id;
-
-		PVOID target;
-		PVOID buffer;
-
-		SIZE_T size;
-		SIZE_T return_size;
-	};
 
 	NTSTATUS create(PDEVICE_OBJECT device_object, PIRP irp) {
 		UNREFERENCED_PARAMETER(device_object);
