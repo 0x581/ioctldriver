@@ -195,7 +195,7 @@ namespace driver {
 		static PEPROCESS target_process = nullptr;
 
 		if (DEBUG_DEV_CTRL)
-		debug_print("[+] Device control called.\n");
+			debug_print("[+] Device control called.\n");
 
 		// Get request packet from irp
 		PIO_STACK_LOCATION stack_irp = IoGetCurrentIrpStackLocation(irp);
