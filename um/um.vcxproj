@@ -71,12 +71,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)build\</OutDir>
-    <IntDir>$(SolutionDir)build\um_intermediats\</IntDir>
+    <OutDir>$(SolutionDir)build\executables\</OutDir>
+    <IntDir>$(SolutionDir)build\um_intermediates\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)build\</OutDir>
-    <IntDir>$(Platform)\build\um_intermediats\</IntDir>
+    <OutDir>$(SolutionDir)build\executables\</OutDir>
+    <IntDir>$(SolutionDir)build\um_intermediates\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -120,6 +120,12 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
+    <PostBuildEvent>
+      <Command>XCOPY "$(TargetDir)um.exe" "$(SolutionDir)build\VM Shared\" /Y /I</Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>IF EXIST "$(SolutionDir)build\VM Shared\um.exe" DEL /Q /F "$(SolutionDir)build\VM Shared\um.exe"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -139,6 +145,12 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
+    <PostBuildEvent>
+      <Command>XCOPY "$(TargetDir)um.exe" "$(SolutionDir)build\VM Shared\" /Y /I</Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>IF EXIST "$(SolutionDir)build\VM Shared\um.exe" DEL /Q /F "$(SolutionDir)build\VM Shared\um.exe"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />

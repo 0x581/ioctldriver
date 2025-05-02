@@ -73,12 +73,12 @@
   <PropertyGroup />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
-    <OutDir>$(SolutionDir)build\</OutDir>
+    <OutDir>$(SolutionDir)build\executables\</OutDir>
     <IntDir>$(SolutionDir)build\km_intermediates\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
-    <OutDir>$(SolutionDir)build\</OutDir>
+    <OutDir>$(SolutionDir)build\executables\</OutDir>
     <IntDir>$(SolutionDir)build\km_intermediates\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -98,6 +98,12 @@
     <Link>
       <EntryPointSymbol>DriverEntry</EntryPointSymbol>
     </Link>
+    <PostBuildEvent>
+      <Command>XCOPY "$(TargetDir)driver.sys" "$(SolutionDir)build\VM Shared\" /Y /I</Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>IF EXIST "$(SolutionDir)build\VM Shared\driver.sys" DEL /Q /F "$(SolutionDir)build\VM Shared\driver.sys"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <DriverSign>
@@ -110,6 +116,12 @@
     <Link>
       <EntryPointSymbol>DriverEntry</EntryPointSymbol>
     </Link>
+    <PostBuildEvent>
+      <Command>XCOPY "$(TargetDir)driver.sys" "$(SolutionDir)build\VM Shared\" /Y /I</Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>IF EXIST "$(SolutionDir)build\VM Shared\driver.sys" DEL /Q /F "$(SolutionDir)build\VM Shared\driver.sys"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <DriverSign>
