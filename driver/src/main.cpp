@@ -247,7 +247,7 @@ namespace driver {
 			status = set_debug_level(*(size_t*)request->buffer, request->return_value);
 			break;
 		default:
-				debug_print("[-] Unknown control code: %x\n", control_code);
+			debug_print("[-] Unknown control code: %x\n", control_code);
 			break;
 		}
 

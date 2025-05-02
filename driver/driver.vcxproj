@@ -141,7 +141,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\debug.cpp" />
+    <ClCompile Include="src\get_process.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="windows_functions\ZwQuerySystemInformation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\driver.h" />
