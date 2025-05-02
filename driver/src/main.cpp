@@ -65,7 +65,7 @@ namespace driver {
 
 	NTSTATUS set_debug_level(const size_t new_flags, size_t& old_flags) {
 		if (DEBUG_SET_DEBUG_LEVEL)
-			debug_print("[+] Setting debug level from %p to %p.\n", DEBUG_FLAGS, new_flags);
+			debug("[+] Setting debug level from %p to %p.\n", DEBUG_FLAGS, new_flags);
 
 		old_flags = DEBUG_FLAGS;
 
@@ -76,19 +76,19 @@ namespace driver {
 
 	NTSTATUS unattach(OpenProcess& process_struct) {
 		if (DEBUG_UNATTACH)
-			debug_print("[+] Unattaching from process.\n");
+			debug("[+] Unattaching from process.\n");
 
 		if (!process_struct.process)
 		{
 			if (DEBUG_UNATTACH)
-				debug_print("[-] Not attached to a process.\n");
+				debug("[-] Not attached to a process.\n");
 			return STATUS_INVALID_PARAMETER;
 		}
 
 		process_struct.Clear();
 
 		if (DEBUG_UNATTACH)
-			debug_print("[+] Unattached from process.\n");
+			debug("[+] Unattached from process.\n");
 
 		return STATUS_SUCCESS;
 	}
@@ -98,16 +98,16 @@ namespace driver {
 			unattach(process_struct);
 
 		if (DEBUG_ATTACH)
-			debug_print("[+] Attaching to process (%d).\n", pid);
+			debug("[+] Attaching to process (%d).\n", pid);
 
 		NTSTATUS status = PsLookupProcessByProcessId(pid, &process_struct.process);
 
 		if (DEBUG_ATTACH)
 		{
 			if (!NT_SUCCESS(status))
-				debug_print("[-] Failed to attach to process (%d).\n", pid);
+				debug("[-] Failed to attach to process (%d).\n", pid);
 			else
-				debug_print("[+] Attached to process (%d).\n", pid);
+				debug("[+] Attached to process (%d).\n", pid);
 		}
 
 		return status;
@@ -115,12 +115,12 @@ namespace driver {
 
 	NTSTATUS process_is_alive(OpenProcess& process_struct, SIZE_T& is_alive) {
 		if (DEBUG_TARGET_ALIVE)
-			debug_print("[+] Checking if target process is alive.\n");
+			debug("[+] Checking if target process is alive.\n");
 
 		if (!process_struct.Connected())
 		{
 			if (DEBUG_TARGET_ALIVE)
-				debug_print("[-] Not attached to a process.\n");
+				debug("[-] Not attached to a process.\n");
 
 			is_alive = FALSE;
 
@@ -136,19 +136,19 @@ namespace driver {
 		is_alive = (exit_status == STATUS_TIMEOUT);
 
 		if (DEBUG_TARGET_ALIVE)
-			debug_print("[+] Target process is %s.\n", is_alive ? "alive" : "dead");
+			debug("[+] Target process is %s.\n", is_alive ? "alive" : "dead");
 
 		return STATUS_SUCCESS;
 	}
 
 	NTSTATUS read_memory(OpenProcess& process_struct, PVOID destination, PVOID source, SIZE_T size, PSIZE_T return_size) {
 		if (DEBUG_READ)
-			debug_print("[+] Reading %d bytes from %p to %p.\n", size, source, destination);
+			debug("[+] Reading %d bytes from %p to %p.\n", size, source, destination);
 
 		if (!process_struct.Connected())
 		{
 			if (DEBUG_READ)
-				debug_print("[-] Not attached to a procss.\n");
+				debug("[-] Not attached to a procss.\n");
 
 			return STATUS_INVALID_PARAMETER;
 		}
@@ -157,19 +157,19 @@ namespace driver {
 			destination, size, KernelMode, return_size);
 
 		if (DEBUG_READ) if (!NT_SUCCESS(status))
-			debug_print("[-] Failed to read memory.\n");
+			debug("[-] Failed to read memory.\n");
 
 		return status;
 	}
 
 	NTSTATUS write_memory(OpenProcess& process_struct, PVOID destination, PVOID source, SIZE_T size, PSIZE_T return_size) {
 		if (DEBUG_WRITE)
-			debug_print("[+] Writing %d bytes from %p to %p.\n", size, source, destination);
+			debug("[+] Writing %d bytes from %p to %p.\n", size, source, destination);
 
 		if (!process_struct.Connected())
 		{
 			if (DEBUG_READ)
-				debug_print("[-] Not attached to a procss.\n");
+				debug("[-] Not attached to a procss.\n");
 
 			return STATUS_INVALID_PARAMETER;
 		}
@@ -178,7 +178,7 @@ namespace driver {
 			destination, size, KernelMode, return_size);
 
 		if (DEBUG_WRITE) if (!NT_SUCCESS(status))
-			debug_print("[-] Failed to write memory.\n");
+			debug("[-] Failed to write memory.\n");
 
 		return status;
 	}
@@ -202,7 +202,7 @@ namespace driver {
 		static OpenProcess target_process{};
 
 		if (DEBUG_DEV_CTRL)
-			debug_print("[+] Device control called.\n");
+			debug("[+] Device control called.\n");
 
 		// Get request packet from irp
 		PIO_STACK_LOCATION stack_irp = IoGetCurrentIrpStackLocation(irp);
@@ -247,7 +247,7 @@ namespace driver {
 			status = set_debug_level(*(size_t*)request->buffer, request->return_value);
 			break;
 		default:
-			debug_print("[-] Unknown control code: %x\n", control_code);
+			debug("[-] Unknown control code: %x\n", control_code);
 			break;
 		}
 
@@ -272,11 +272,11 @@ NTSTATUS driver_main(PDRIVER_OBJECT driver_object, PUNICODE_STRING registry_path
 
 	if (!NT_SUCCESS(status))
 	{
-		debug_print("[-] Failed to create driver device.\n");
+		debug("[-] Failed to create driver device.\n");
 		return status;
 	}
 
-	debug_print("[+] Driver device successfully created.\n");
+	debug("[+] Driver device successfully created.\n");
 
 	UNICODE_STRING symbolic_link = {};
 	RtlInitUnicodeString(&symbolic_link, L"\\DosDevices\\AssPileDriver");
@@ -284,11 +284,11 @@ NTSTATUS driver_main(PDRIVER_OBJECT driver_object, PUNICODE_STRING registry_path
 	status = IoCreateSymbolicLink(&symbolic_link, &device_name);
 	if (!NT_SUCCESS(status))
 	{
-		debug_print("[-] Failed to establish symbolic link\n");
+		debug("[-] Failed to establish symbolic link\n");
 		return status;
 	}
 
-	debug_print("[+] Driver symbolic link successfully established.\n");
+	debug("[+] Driver symbolic link successfully established.\n");
 	SetFlag(device_object->Flags, DO_BUFFERED_IO);
 
 	driver_object->MajorFunction[IRP_MJ_CREATE] = driver::create;
@@ -297,13 +297,13 @@ NTSTATUS driver_main(PDRIVER_OBJECT driver_object, PUNICODE_STRING registry_path
 
 	ClearFlag(device_object->Flags, DO_DEVICE_INITIALIZING);
 
-	debug_print("[+] Driver initialized successfully.\n");
+	debug("[+] Driver initialized successfully.\n");
 
 	return STATUS_SUCCESS;
 }
 
 NTSTATUS DriverEntry() {
-	debug_print("[+] DriverEntry called. Initializing driver...\n");
+	debug("[+] DriverEntry called. Initializing driver...\n");
 
 	UNICODE_STRING driver_name = {};
 	RtlInitUnicodeString(&driver_name, L"\\Driver\\AssPileDriver");

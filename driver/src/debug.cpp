@@ -7,8 +7,7 @@
 #include <ntstrsafe.h>
 #endif
 
-void debug_print(PCSTR format, ...)
-{
+void debug(PCSTR format, ...) {
 #ifndef DEBUG
 	UNREFERENCED_PARAMETER(format);
 #else
@@ -22,7 +21,7 @@ void debug_print(PCSTR format, ...)
 	if (NT_SUCCESS(ret))
 		KdPrintEx((DPFLTR_IHVDRIVER_ID, DPFLTR_INFO_LEVEL, buffer));
 	else
-		KdPrintEx((DPFLTR_IHVDRIVER_ID, DPFLTR_INFO_LEVEL, "Error in debug_print: formatting failed\n"));
+		KdPrintEx((DPFLTR_IHVDRIVER_ID, DPFLTR_INFO_LEVEL, "Error in debug: formatting failed\n"));
 
 	va_end(args);
 #endif // DEBUG

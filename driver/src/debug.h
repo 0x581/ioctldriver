@@ -37,4 +37,4 @@ static size_t DEBUG_FLAGS = DEFAULT_FLAGS;
 #define DEBUG_SET_DEBUG_LEVEL	(DEBUG_FLAGS & DEBUG_FLAG_SET_DEBUG_LEVEL)
 
 
-void debug_print(const char* format, ...);
+void debug(const char* format, ...);
