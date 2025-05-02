@@ -23,11 +23,10 @@ namespace driver {
 			CTL_CODE(FILE_DEVICE_UNKNOWN, 201, METHOD_BUFFERED, FILE_SPECIAL_ACCESS);
 	}
 
-	struct Request
-	{
+	struct Request {
 		HANDLE process_id;
 
-		PVOID target;
+		PVOID target_address;
 		PVOID buffer;
 
 		SIZE_T return_value;

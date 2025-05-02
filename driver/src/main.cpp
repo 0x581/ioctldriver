@@ -1,40 +1,14 @@
 #pragma once
 
-#include "driver_defines.hpp"
+#include "debug.h"
+#include "driver.h"
 
+#include <basetsd.h>
+#include <ntddk.h>
+#include <ntdef.h>
 #include <ntifs.h>
-
-#ifndef DEBUG
-#define DEBUG
-#endif
-
-#ifdef DEBUG
-	#include <ntstrsafe.h>
-#endif
-
-constexpr auto DEBUG_FLAG_DEV_CTRL = 0x1 << 0;
-constexpr auto DEBUG_FLAG_ATTACH = 0x1 << 1;
-constexpr auto DEBUG_FLAG_UNATTACH = 0x1 << 2;
-constexpr auto DEBUG_FLAG_TARGET_ALIVE = 0x1 << 3;
-constexpr auto DEBUG_FLAG_READ = 0x1 << 10;
-constexpr auto DEBUG_FLAG_WRITE = 0x1 << 11;
-
-constexpr auto DEBUG_FLAGS = (
-	0x0
-	| DEBUG_FLAG_DEV_CTRL
-	| DEBUG_FLAG_ATTACH
-	| DEBUG_FLAG_UNATTACH
-	| DEBUG_FLAG_TARGET_ALIVE
-	| DEBUG_FLAG_READ
-	| DEBUG_FLAG_WRITE
-);
-
-constexpr auto DEBUG_DEV_CTRL = DEBUG_FLAGS & DEBUG_FLAG_DEV_CTRL;
-constexpr auto DEBUG_ATTACH = DEBUG_FLAGS & DEBUG_FLAG_ATTACH;
-constexpr auto DEBUG_UNATTACH = DEBUG_FLAGS & DEBUG_FLAG_UNATTACH;
-constexpr auto DEBUG_TARGET_ALIVE = DEBUG_FLAGS & DEBUG_FLAG_TARGET_ALIVE;
-constexpr auto DEBUG_READ = DEBUG_FLAGS & DEBUG_FLAG_READ;
-constexpr auto DEBUG_WRITE = DEBUG_FLAGS & DEBUG_FLAG_WRITE;
+#include <ntstatus.h>
+#include <wdm.h>
 
 extern "C" {
 	NTKERNELAPI NTSTATUS IoCreateDriver(PUNICODE_STRING DriverName,
@@ -46,29 +20,36 @@ extern "C" {
 		PSIZE_T ReturnSize);
 }
 
-void debug_print(PCSTR format, ...)
-{
-#ifndef DEBUG
-	UNREFERENCED_PARAMETER(format);
-#else
-	va_list args;
-	va_start(args, format);
+namespace driver {
+	struct OpenProcess {
+		PEPROCESS process;
+		HANDLE pid;
 
-	char buffer[1024];
+		BOOLEAN is_alive;
 
-	const auto ret = RtlStringCbVPrintfA(buffer, sizeof(buffer), format, args);
+		OpenProcess() : process(nullptr), pid(nullptr), is_alive(FALSE) {}
 
-	if (NT_SUCCESS(ret))
-		KdPrintEx((DPFLTR_IHVDRIVER_ID, DPFLTR_INFO_LEVEL, buffer));
-	else
-		KdPrintEx((DPFLTR_IHVDRIVER_ID, DPFLTR_INFO_LEVEL, "Error in debug_print: formatting failed\n"));
+		BOOLEAN Connected() const { return process != nullptr; }
 
-	va_end(args);
+		VOID Connect(PEPROCESS target_process) {
+			if (this->Connected())
+				this->Clear();
 
-#endif // DEBUG
+			this->process = target_process;
+			this->pid = PsGetProcessId(target_process);
+			this->is_alive = TRUE;
 }
 
-namespace driver {
+		VOID Clear() {
+			if (this->process)
+			{
+				ObDereferenceObject(process);
+				this->process = nullptr;
+			}
+			this->pid = nullptr;
+			this->is_alive = FALSE;
+		}
+	};
 
 	NTSTATUS create(PDEVICE_OBJECT device_object, PIRP irp) {
 		UNREFERENCED_PARAMETER(device_object);
@@ -246,8 +227,7 @@ namespace driver {
 	}
 }
 
-NTSTATUS driver_main(PDRIVER_OBJECT driver_object, PUNICODE_STRING registry_path)
-{
+NTSTATUS driver_main(PDRIVER_OBJECT driver_object, PUNICODE_STRING registry_path) {
 	UNREFERENCED_PARAMETER(registry_path);
 
 	UNICODE_STRING device_name = {};
@@ -269,7 +249,8 @@ NTSTATUS driver_main(PDRIVER_OBJECT driver_object, PUNICODE_STRING registry_path
 	RtlInitUnicodeString(&symbolic_link, L"\\DosDevices\\AssPileDriver");
 
 	status = IoCreateSymbolicLink(&symbolic_link, &device_name);
-	if (!NT_SUCCESS(status)) {
+	if (!NT_SUCCESS(status))
+	{
 		debug_print("[-] Failed to establish symbolic link\n");
 		return status;
 	}
