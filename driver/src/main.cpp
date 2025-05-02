@@ -38,7 +38,7 @@ namespace driver {
 			this->process = target_process;
 			this->pid = PsGetProcessId(target_process);
 			this->is_alive = TRUE;
-}
+		}
 
 		VOID Clear() {
 			if (this->process)
@@ -67,57 +67,35 @@ namespace driver {
 		return irp->IoStatus.Status;
 	}
 
-	NTSTATUS unattach(PEPROCESS* target_process) {
-		if (DEBUG_UNATTACH)
+	NTSTATUS unattach(OpenProcess& process_struct) {
+		if constexpr (DEBUG_UNATTACH)
 			debug_print("[+] Unattaching from process.\n");
 
-		if (!*target_process) {
-			if (DEBUG_UNATTACH)
+		if (!process_struct.process)
+		{
+			if constexpr (DEBUG_UNATTACH)
 				debug_print("[-] Not attached to a process.\n");
 			return STATUS_INVALID_PARAMETER;
 		}
 
-		ObDereferenceObject(*target_process);
-		*target_process = nullptr;
+		process_struct.Clear();
 
-		if (DEBUG_UNATTACH)
+		if constexpr (DEBUG_UNATTACH)
 			debug_print("[+] Unattached from process.\n");
 
 		return STATUS_SUCCESS;
 	}
 
-	NTSTATUS target_is_alive(PEPROCESS target_process, PSIZE_T is_alive) {
-		if (DEBUG_TARGET_ALIVE)
-			debug_print("[+] Checking if target process is alive.\n");
+	NTSTATUS attach(OpenProcess& process_struct, HANDLE pid) {
+		if (process_struct.Connected())
+			unattach(process_struct);
 
-		if (!target_process) {
-			if (DEBUG_TARGET_ALIVE)
-				debug_print("[-] Not attached to a process.\n");
-			return STATUS_INVALID_PARAMETER;
-		}
-
-		NTSTATUS status = STATUS_SUCCESS;
-
-		// Check if the process is alive
-		//if (KeReadStateProcess(target_process)) {
-		//	if (DEBUG_TARGET_ALIVE)
-		//		debug_print("[-] Target process is dead.\n");
-		//	return STATUS_INVALID_PARAMETER;
-		//}
-
-		return status;
-	}
-
-	NTSTATUS attach(HANDLE pid, PEPROCESS* target_process) {
-		if (*target_process)
-			unattach(target_process);
-
-		if (DEBUG_ATTACH)
+		if constexpr (DEBUG_ATTACH)
 			debug_print("[+] Attaching to process (%d).\n", pid);
 
-		NTSTATUS status = PsLookupProcessByProcessId(pid, target_process);
+		NTSTATUS status = PsLookupProcessByProcessId(pid, &process_struct.process);
 
-		if (DEBUG_ATTACH)
+		if constexpr (DEBUG_ATTACH)
 		{
 			if (!NT_SUCCESS(status))
 				debug_print("[-] Failed to attach to process (%d).\n", pid);
@@ -128,44 +106,83 @@ namespace driver {
 		return status;
 	}
 
-	NTSTATUS read_memory(PVOID destination, PVOID source, SIZE_T size, PEPROCESS src_process, PSIZE_T return_size) {
-		if (DEBUG_READ)
+	NTSTATUS process_is_alive(OpenProcess& process_struct, PSIZE_T is_alive) {
+		if constexpr (DEBUG_TARGET_ALIVE)
+			debug_print("[+] Checking if target process is alive.\n");
+
+		if (!process_struct.Connected())
+		{
+			if constexpr (DEBUG_TARGET_ALIVE)
+				debug_print("[-] Not attached to a process.\n");
+			return STATUS_INVALID_PARAMETER;
+		}
+
+		//const auto exit_status = PsGetProcessExitStatus(target_process);
+
+		LARGE_INTEGER timeout_0{ 0 };
+		const auto exit_status = KeWaitForSingleObject(process_struct.process, KWAIT_REASON::Executive,
+			KernelMode, FALSE, &timeout_0);
+
+		*is_alive = (exit_status == STATUS_TIMEOUT);
+
+
+		if constexpr (DEBUG_TARGET_ALIVE)
+			debug_print("[+] Target process is %s.\n", *is_alive ? "alive" : "dead");
+
+		return STATUS_SUCCESS;
+	}
+
+	NTSTATUS read_memory(OpenProcess& process_struct, PVOID destination, PVOID source, SIZE_T size, PSIZE_T return_size) {
+		if constexpr (DEBUG_READ)
 			debug_print("[+] Reading %d bytes from %p to %p.\n", size, source, destination);
 
-		if (!src_process) {
-			if (DEBUG_READ)
+		if (!process_struct.Connected())
+		{
+			if constexpr (DEBUG_READ)
 				debug_print("[-] Not attached to a procss.\n");
 
 			return STATUS_INVALID_PARAMETER;
 		}
 
-		const auto status = MmCopyVirtualMemory(src_process, source, PsGetCurrentProcess(),
-												destination, size, KernelMode, return_size);
+		const auto status = MmCopyVirtualMemory(process_struct.process, source, PsGetCurrentProcess(),
+			destination, size, KernelMode, return_size);
 
-		if (DEBUG_READ && !NT_SUCCESS(status))
+		if constexpr (DEBUG_READ) if (!NT_SUCCESS(status))
 			debug_print("[-] Failed to read memory.\n");
 
 		return status;
 	}
 
-	NTSTATUS write_memory(PVOID destination, PVOID source, SIZE_T size, PEPROCESS dest_process, PSIZE_T return_size) {
-		if (DEBUG_WRITE)
+	NTSTATUS write_memory(OpenProcess& process_struct, PVOID destination, PVOID source, SIZE_T size, PSIZE_T return_size) {
+		if constexpr (DEBUG_WRITE)
 			debug_print("[+] Writing %d bytes from %p to %p.\n", size, source, destination);
 
-		if (!dest_process) {
-			if (DEBUG_READ)
+		if (!process_struct.Connected())
+		{
+			if constexpr (DEBUG_READ)
 				debug_print("[-] Not attached to a procss.\n");
 
 			return STATUS_INVALID_PARAMETER;
 		}
 
-		const auto status = MmCopyVirtualMemory(PsGetCurrentProcess(), source, dest_process,
+		const auto status = MmCopyVirtualMemory(PsGetCurrentProcess(), source, process_struct.process,
 			destination, size, KernelMode, return_size);
 
-		if (DEBUG_WRITE && !NT_SUCCESS(status))
+		if constexpr (DEBUG_WRITE) if (!NT_SUCCESS(status))
 			debug_print("[-] Failed to write memory.\n");
 
 		return status;
+	}
+
+	NTSTATUS get_module(OpenProcess& process_struct, PVOID module_name, PVOID* address) {
+		UNREFERENCED_PARAMETER(module_name);
+		UNREFERENCED_PARAMETER(process_struct);
+		UNREFERENCED_PARAMETER(address);
+
+		// Get the PEB of the Process
+		//PEPROCESS peb = PsGetProcessPeb(process);
+
+		return STATUS_SUCCESS;
 	}
 
 
@@ -173,17 +190,18 @@ namespace driver {
 		UNREFERENCED_PARAMETER(device_object);
 
 		// This holds the process across calls to the driver.
-		static PEPROCESS target_process = nullptr;
+		static OpenProcess target_process{};
 
-		if (DEBUG_DEV_CTRL)
+		if constexpr (DEBUG_DEV_CTRL)
 			debug_print("[+] Device control called.\n");
 
 		// Get request packet from irp
 		PIO_STACK_LOCATION stack_irp = IoGetCurrentIrpStackLocation(irp);
 
-		Request *request = reinterpret_cast<Request*>(irp->AssociatedIrp.SystemBuffer);
+		Request* request = reinterpret_cast<Request*>(irp->AssociatedIrp.SystemBuffer);
 
-		if (stack_irp == nullptr || request == nullptr) {
+		if (stack_irp == nullptr || request == nullptr)
+		{
 			IoCompleteRequest(irp, IO_NO_INCREMENT);
 			return STATUS_UNSUCCESSFUL;
 		}
@@ -195,27 +213,29 @@ namespace driver {
 
 		switch (control_code)
 		{
-			case codes::attach:
-				status = attach(request->process_id, &target_process);
-				break;
-			case codes::unattach:
-				status = unattach(&target_process);
-				break;
-			case codes::target_is_alive:
-				status = target_is_alive(target_process, &(request->return_value));
-				break;
-			case codes::read:
-				status = read_memory(request->buffer, request->target, request->size,
-									 target_process, &request->return_size);
-				break;
-			case codes::write:
-				status = write_memory(request->target, request->buffer, request->size,
-									  target_process, &request->return_size);
-				break;
-			default:
-				if (DEBUG_DEV_CTRL)
-					debug_print("[-] Unknown control code: %x\n", control_code);
-				break;
+		case codes::attach:
+			status = attach(target_process, request->process_id);
+			break;
+		case codes::unattach:
+			status = unattach(target_process);
+			break;
+		case codes::target_is_alive:
+			status = process_is_alive(target_process, &(request->return_value));
+			break;
+		case codes::read:
+			status = read_memory(target_process, request->buffer, request->target_address, request->size, &request->return_size);
+			break;
+		case codes::write:
+			status = write_memory(target_process, request->target_address, request->buffer, request->size, &request->return_size);
+			break;
+		case codes::get_module:
+			status = get_module(target_process, request->buffer,
+				reinterpret_cast<PVOID*> (&request->return_value));
+			break;
+		default:
+			if constexpr (DEBUG_DEV_CTRL)
+				debug_print("[-] Unknown control code: %x\n", control_code);
+			break;
 		}
 
 		irp->IoStatus.Status = status;
@@ -235,7 +255,7 @@ NTSTATUS driver_main(PDRIVER_OBJECT driver_object, PUNICODE_STRING registry_path
 
 	PDEVICE_OBJECT device_object = nullptr;
 	NTSTATUS status = IoCreateDevice(driver_object, 0, &device_name, FILE_DEVICE_UNKNOWN,
-										FILE_DEVICE_SECURE_OPEN, FALSE, &device_object);
+		FILE_DEVICE_SECURE_OPEN, FALSE, &device_object);
 
 	if (!NT_SUCCESS(status))
 	{
