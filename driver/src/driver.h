@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Windows.h>
+#include <ntifs.h>
 
 namespace driver {
 	namespace codes {

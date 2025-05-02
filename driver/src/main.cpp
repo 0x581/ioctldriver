@@ -3,12 +3,8 @@
 #include "debug.h"
 #include "driver.h"
 
-#include <basetsd.h>
-#include <ntddk.h>
-#include <ntdef.h>
 #include <ntifs.h>
-#include <ntstatus.h>
-#include <wdm.h>
+#include <ntddk.h>
 
 extern "C" {
 	NTKERNELAPI NTSTATUS IoCreateDriver(PUNICODE_STRING DriverName,
@@ -106,7 +102,7 @@ namespace driver {
 		return status;
 	}
 
-	NTSTATUS process_is_alive(OpenProcess& process_struct, PSIZE_T is_alive) {
+	NTSTATUS process_is_alive(OpenProcess& process_struct, SIZE_T& is_alive) {
 		if constexpr (DEBUG_TARGET_ALIVE)
 			debug_print("[+] Checking if target process is alive.\n");
 
@@ -114,6 +110,9 @@ namespace driver {
 		{
 			if constexpr (DEBUG_TARGET_ALIVE)
 				debug_print("[-] Not attached to a process.\n");
+
+			is_alive = FALSE;
+
 			return STATUS_INVALID_PARAMETER;
 		}
 
@@ -123,11 +122,10 @@ namespace driver {
 		const auto exit_status = KeWaitForSingleObject(process_struct.process, KWAIT_REASON::Executive,
 			KernelMode, FALSE, &timeout_0);
 
-		*is_alive = (exit_status == STATUS_TIMEOUT);
-
+		is_alive = (exit_status == STATUS_TIMEOUT);
 
 		if constexpr (DEBUG_TARGET_ALIVE)
-			debug_print("[+] Target process is %s.\n", *is_alive ? "alive" : "dead");
+			debug_print("[+] Target process is %s.\n", is_alive ? "alive" : "dead");
 
 		return STATUS_SUCCESS;
 	}
@@ -174,7 +172,7 @@ namespace driver {
 		return status;
 	}
 
-	NTSTATUS get_module(OpenProcess& process_struct, PVOID module_name, PVOID* address) {
+	NTSTATUS get_module(OpenProcess& process_struct, PVOID module_name, uintptr_t& address) {
 		UNREFERENCED_PARAMETER(module_name);
 		UNREFERENCED_PARAMETER(process_struct);
 		UNREFERENCED_PARAMETER(address);
@@ -220,7 +218,7 @@ namespace driver {
 			status = unattach(target_process);
 			break;
 		case codes::target_is_alive:
-			status = process_is_alive(target_process, &(request->return_value));
+			status = process_is_alive(target_process, request->return_value);
 			break;
 		case codes::read:
 			status = read_memory(target_process, request->buffer, request->target_address, request->size, &request->return_size);
@@ -229,8 +227,7 @@ namespace driver {
 			status = write_memory(target_process, request->target_address, request->buffer, request->size, &request->return_size);
 			break;
 		case codes::get_module:
-			status = get_module(target_process, request->buffer,
-				reinterpret_cast<PVOID*> (&request->return_value));
+			status = get_module(target_process, request->buffer, request->return_value);
 			break;
 		default:
 			if constexpr (DEBUG_DEV_CTRL)
