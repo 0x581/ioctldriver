@@ -230,7 +230,6 @@ namespace driver {
 			status = get_module(target_process, request->buffer, request->return_value);
 			break;
 		default:
-			if constexpr (DEBUG_DEV_CTRL)
 				debug_print("[-] Unknown control code: %x\n", control_code);
 			break;
 		}
