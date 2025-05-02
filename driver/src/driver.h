@@ -1,9 +1,19 @@
 #pragma once
 
-#include <ntifs.h>
+#define CTL_CODE( DeviceType, Function, Method, Access ) (                 \
+    ((DeviceType) << 16) | ((Access) << 14) | ((Function) << 2) | (Method) \
+)
+
+#define FILE_DEVICE_UNKNOWN             0x00000022
+#define METHOD_BUFFERED                 0
+#define FILE_ANY_ACCESS                 0
+#define FILE_SPECIAL_ACCESS    (FILE_ANY_ACCESS)
 
 namespace driver {
 	namespace codes {
+		constexpr ULONG nothing =
+			CTL_CODE(FILE_DEVICE_UNKNOWN, 0, METHOD_BUFFERED, FILE_SPECIAL_ACCESS);
+
 		constexpr ULONG attach =
 			CTL_CODE(FILE_DEVICE_UNKNOWN, 1, METHOD_BUFFERED, FILE_SPECIAL_ACCESS);
 
@@ -21,17 +31,20 @@ namespace driver {
 
 		constexpr ULONG get_module =
 			CTL_CODE(FILE_DEVICE_UNKNOWN, 201, METHOD_BUFFERED, FILE_SPECIAL_ACCESS);
+
+		constexpr ULONG set_debug_level =
+			CTL_CODE(FILE_DEVICE_UNKNOWN, 500, METHOD_BUFFERED, FILE_SPECIAL_ACCESS);
 	}
 
 	struct Request {
 		HANDLE process_id;
 
-		PVOID target_address;
-		PVOID buffer;
+		void* target_address;
+		void* buffer;
 
-		SIZE_T return_value;
+		size_t return_value;
 
-		SIZE_T size;
-		SIZE_T return_size;
+		size_t size;
+		size_t return_size;
 	};
 }

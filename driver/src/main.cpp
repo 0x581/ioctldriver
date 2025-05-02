@@ -63,20 +63,31 @@ namespace driver {
 		return irp->IoStatus.Status;
 	}
 
+	NTSTATUS set_debug_level(const size_t new_flags, size_t& old_flags) {
+		if (DEBUG_SET_DEBUG_LEVEL)
+			debug_print("[+] Setting debug level from %p to %p.\n", DEBUG_FLAGS, new_flags);
+
+		old_flags = DEBUG_FLAGS;
+
+		DEBUG_FLAGS = new_flags;
+
+		return STATUS_SUCCESS;
+	}
+
 	NTSTATUS unattach(OpenProcess& process_struct) {
-		if constexpr (DEBUG_UNATTACH)
+		if (DEBUG_UNATTACH)
 			debug_print("[+] Unattaching from process.\n");
 
 		if (!process_struct.process)
 		{
-			if constexpr (DEBUG_UNATTACH)
+			if (DEBUG_UNATTACH)
 				debug_print("[-] Not attached to a process.\n");
 			return STATUS_INVALID_PARAMETER;
 		}
 
 		process_struct.Clear();
 
-		if constexpr (DEBUG_UNATTACH)
+		if (DEBUG_UNATTACH)
 			debug_print("[+] Unattached from process.\n");
 
 		return STATUS_SUCCESS;
@@ -86,12 +97,12 @@ namespace driver {
 		if (process_struct.Connected())
 			unattach(process_struct);
 
-		if constexpr (DEBUG_ATTACH)
+		if (DEBUG_ATTACH)
 			debug_print("[+] Attaching to process (%d).\n", pid);
 
 		NTSTATUS status = PsLookupProcessByProcessId(pid, &process_struct.process);
 
-		if constexpr (DEBUG_ATTACH)
+		if (DEBUG_ATTACH)
 		{
 			if (!NT_SUCCESS(status))
 				debug_print("[-] Failed to attach to process (%d).\n", pid);
@@ -103,12 +114,12 @@ namespace driver {
 	}
 
 	NTSTATUS process_is_alive(OpenProcess& process_struct, SIZE_T& is_alive) {
-		if constexpr (DEBUG_TARGET_ALIVE)
+		if (DEBUG_TARGET_ALIVE)
 			debug_print("[+] Checking if target process is alive.\n");
 
 		if (!process_struct.Connected())
 		{
-			if constexpr (DEBUG_TARGET_ALIVE)
+			if (DEBUG_TARGET_ALIVE)
 				debug_print("[-] Not attached to a process.\n");
 
 			is_alive = FALSE;
@@ -124,19 +135,19 @@ namespace driver {
 
 		is_alive = (exit_status == STATUS_TIMEOUT);
 
-		if constexpr (DEBUG_TARGET_ALIVE)
+		if (DEBUG_TARGET_ALIVE)
 			debug_print("[+] Target process is %s.\n", is_alive ? "alive" : "dead");
 
 		return STATUS_SUCCESS;
 	}
 
 	NTSTATUS read_memory(OpenProcess& process_struct, PVOID destination, PVOID source, SIZE_T size, PSIZE_T return_size) {
-		if constexpr (DEBUG_READ)
+		if (DEBUG_READ)
 			debug_print("[+] Reading %d bytes from %p to %p.\n", size, source, destination);
 
 		if (!process_struct.Connected())
 		{
-			if constexpr (DEBUG_READ)
+			if (DEBUG_READ)
 				debug_print("[-] Not attached to a procss.\n");
 
 			return STATUS_INVALID_PARAMETER;
@@ -145,19 +156,19 @@ namespace driver {
 		const auto status = MmCopyVirtualMemory(process_struct.process, source, PsGetCurrentProcess(),
 			destination, size, KernelMode, return_size);
 
-		if constexpr (DEBUG_READ) if (!NT_SUCCESS(status))
+		if (DEBUG_READ) if (!NT_SUCCESS(status))
 			debug_print("[-] Failed to read memory.\n");
 
 		return status;
 	}
 
 	NTSTATUS write_memory(OpenProcess& process_struct, PVOID destination, PVOID source, SIZE_T size, PSIZE_T return_size) {
-		if constexpr (DEBUG_WRITE)
+		if (DEBUG_WRITE)
 			debug_print("[+] Writing %d bytes from %p to %p.\n", size, source, destination);
 
 		if (!process_struct.Connected())
 		{
-			if constexpr (DEBUG_READ)
+			if (DEBUG_READ)
 				debug_print("[-] Not attached to a procss.\n");
 
 			return STATUS_INVALID_PARAMETER;
@@ -166,7 +177,7 @@ namespace driver {
 		const auto status = MmCopyVirtualMemory(PsGetCurrentProcess(), source, process_struct.process,
 			destination, size, KernelMode, return_size);
 
-		if constexpr (DEBUG_WRITE) if (!NT_SUCCESS(status))
+		if (DEBUG_WRITE) if (!NT_SUCCESS(status))
 			debug_print("[-] Failed to write memory.\n");
 
 		return status;
@@ -180,7 +191,7 @@ namespace driver {
 		// Get the PEB of the Process
 		//PEPROCESS peb = PsGetProcessPeb(process);
 
-		return STATUS_SUCCESS;
+		return STATUS_NOT_IMPLEMENTED;
 	}
 
 
@@ -190,7 +201,7 @@ namespace driver {
 		// This holds the process across calls to the driver.
 		static OpenProcess target_process{};
 
-		if constexpr (DEBUG_DEV_CTRL)
+		if (DEBUG_DEV_CTRL)
 			debug_print("[+] Device control called.\n");
 
 		// Get request packet from irp
@@ -211,6 +222,9 @@ namespace driver {
 
 		switch (control_code)
 		{
+		case codes::nothing:
+			status = STATUS_SUCCESS;
+			break;
 		case codes::attach:
 			status = attach(target_process, request->process_id);
 			break;
@@ -228,6 +242,9 @@ namespace driver {
 			break;
 		case codes::get_module:
 			status = get_module(target_process, request->buffer, request->return_value);
+			break;
+		case codes::set_debug_level:
+			status = set_debug_level(*(size_t*)request->buffer, request->return_value);
 			break;
 		default:
 				debug_print("[-] Unknown control code: %x\n", control_code);
