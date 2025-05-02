@@ -4,8 +4,6 @@
 #define DEBUG
 #endif
 
-#include <ntdef.h>
-
 constexpr auto DEBUG_FLAG_DEV_CTRL = 0x1 << 0;
 constexpr auto DEBUG_FLAG_ATTACH = 0x1 << 1;
 constexpr auto DEBUG_FLAG_UNATTACH = 0x1 << 2;
@@ -15,7 +13,7 @@ constexpr auto DEBUG_FLAG_WRITE = 0x1 << 11;
 constexpr auto DEBUG_FLAG_GET_MODULE = 0x1 << 20;
 constexpr auto DEBUG_FLAG_SET_DEBUG_LEVEL = 0x1 << 30;
 
-static size_t DEBUG_FLAGS = (
+constexpr size_t DEFAULT_FLAGS = (
 	0x0
 	//| DEBUG_FLAG_DEV_CTRL
 	| DEBUG_FLAG_ATTACH
@@ -27,6 +25,8 @@ static size_t DEBUG_FLAGS = (
 	| DEBUG_FLAG_SET_DEBUG_LEVEL
 	);
 
+static size_t DEBUG_FLAGS = DEFAULT_FLAGS;
+
 #define DEBUG_DEV_CTRL			(DEBUG_FLAGS & DEBUG_FLAG_DEV_CTRL)
 #define DEBUG_ATTACH			(DEBUG_FLAGS & DEBUG_FLAG_ATTACH)
 #define DEBUG_UNATTACH			(DEBUG_FLAGS & DEBUG_FLAG_UNATTACH)
@@ -37,4 +37,4 @@ static size_t DEBUG_FLAGS = (
 #define DEBUG_SET_DEBUG_LEVEL	(DEBUG_FLAGS & DEBUG_FLAG_SET_DEBUG_LEVEL)
 
 
-void debug_print(PCSTR format, ...);
+void debug_print(const char* format, ...);

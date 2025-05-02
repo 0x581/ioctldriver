@@ -1,40 +1,14 @@
 #pragma once
 
 #include <Windows.h>
+#include "../../driver/src/driver.h"
+
 
 namespace driver {
-	namespace codes {
-		constexpr ULONG attach =
-			CTL_CODE(FILE_DEVICE_UNKNOWN, 1, METHOD_BUFFERED, FILE_SPECIAL_ACCESS);
-
-		constexpr ULONG unattach =
-			CTL_CODE(FILE_DEVICE_UNKNOWN, 2, METHOD_BUFFERED, FILE_SPECIAL_ACCESS);
-
-		constexpr ULONG target_is_alive =
-			CTL_CODE(FILE_DEVICE_UNKNOWN, 11, METHOD_BUFFERED, FILE_SPECIAL_ACCESS);
-
-		constexpr ULONG read =
-			CTL_CODE(FILE_DEVICE_UNKNOWN, 101, METHOD_BUFFERED, FILE_SPECIAL_ACCESS);
-
-		constexpr ULONG write =
-			CTL_CODE(FILE_DEVICE_UNKNOWN, 102, METHOD_BUFFERED, FILE_SPECIAL_ACCESS);
-
-		constexpr ULONG get_module =
-			CTL_CODE(FILE_DEVICE_UNKNOWN, 201, METHOD_BUFFERED, FILE_SPECIAL_ACCESS);
+	bool do_nothing(HANDLE driver_handle) {
+		Request r;
+		return DeviceIoControl(driver_handle, codes::nothing, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 	}
-
-	struct Request {
-		HANDLE process_id;
-
-		PVOID target_address;
-		PVOID buffer;
-
-		SIZE_T return_value;
-
-		SIZE_T size;
-		SIZE_T return_size;
-	};
-
 
 	bool attach_to_process(HANDLE driver_handle, const DWORD pid) {
 		Request r;
@@ -44,11 +18,11 @@ namespace driver {
 	}
 
 	bool unattach_from_process(HANDLE driver_handle) {
-		return DeviceIoControl(driver_handle, codes::unattach, nullptr, 0, nullptr, 0, nullptr, nullptr);
+		Request r;
+		return DeviceIoControl(driver_handle, codes::unattach, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 	}
 
-
-	bool process_is_alive(HANDLE driver_handle, const DWORD pid) {
+	bool process_is_alive(HANDLE driver_handle) {
 		Request r;
 		const BOOL status = DeviceIoControl(driver_handle, codes::target_is_alive, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 
@@ -67,6 +41,15 @@ namespace driver {
 		DeviceIoControl(driver_handle, codes::read, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 
 		return temp;
+	}
+
+	size_t read_memory(HANDLE driver_handle, const uintptr_t addr, PVOID buffer, const size_t size) {
+		Request r;
+		r.target_address = reinterpret_cast<PVOID>(addr);
+		r.buffer = buffer;
+		r.size = size;
+		DeviceIoControl(driver_handle, codes::read, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
+		return r.return_size;
 	}
 
 	template <class T>
@@ -89,6 +72,13 @@ namespace driver {
 
 		DeviceIoControl(driver_handle, codes::get_module, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 
+		return r.return_value;
+	}
+
+	size_t set_debug_level(HANDLE driver_handle, size_t new_flags) {
+		Request r;
+		r.buffer = &new_flags;
+		DeviceIoControl(driver_handle, codes::set_debug_level, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 		return r.return_value;
 	}
 }
