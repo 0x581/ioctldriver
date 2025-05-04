@@ -80,9 +80,6 @@ void test_connection(const HANDLE driver, const DWORD pid, const size_t iteratio
 }
 
 
-
-
-
 int main() {
 	const HANDLE driver = CreateFile(L"\\\\.\\AssPileDriver", GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 
@@ -100,7 +97,10 @@ int main() {
 	if (success)
 	{
 		std::cout << "Attachment successful.\n";
-		test_connection(driver, getPID(L"Notepad.exe"), 20);
+
+		const auto module_address = driver::get_module(driver, L"Notepad.exe");
+
+		//test_connection(driver, getPID(L"Notepad.exe"), 20);
 	}
 	else
 		std::cout << "Failed to attach to process.\n";

@@ -174,15 +174,8 @@ namespace driver {
 		return status;
 	}
 
-	NTSTATUS get_module(Process& process_struct, PVOID module_name, uintptr_t& address) {
-		UNREFERENCED_PARAMETER(module_name);
-		UNREFERENCED_PARAMETER(process_struct);
-		UNREFERENCED_PARAMETER(address);
-
-		// Get the PEB of the Process
-		//PEPROCESS peb = PsGetProcessPeb(process);
-
-		return STATUS_NOT_IMPLEMENTED;
+	NTSTATUS get_module(Process& process, PVOID module_name, uintptr_t& address) {
+		return findModuleBaseAddress(process, reinterpret_cast<PWCHAR>(module_name), address);
 	}
 
 

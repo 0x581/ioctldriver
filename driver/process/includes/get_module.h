@@ -2,4 +2,6 @@
 
 #include <ntifs.h>
 
-NTSTATUS findModuleBaseAddress(const PEPROCESS process, const PWCHAR module_name, uintptr_t& address);
+#include "process_struct.h"
+
+NTSTATUS findModuleBaseAddress(Process& process, PCWCHAR module_name, uintptr_t& address);
