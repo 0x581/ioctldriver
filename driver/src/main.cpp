@@ -110,11 +110,11 @@ namespace driver {
 		return attach(process_struct, pid);
 	}
 
-	NTSTATUS process_is_alive(Process& process_struct, SIZE_T& is_alive) {
+	NTSTATUS process_is_alive(Process& process, SIZE_T& is_alive) {
 		if (DEBUG_TARGET_ALIVE)
 			debug("[+] Checking if target process is alive.\n");
 
-		if (!process_struct.Connected())
+		if (!process.Connected())
 		{
 			if (DEBUG_TARGET_ALIVE)
 				debug("[-] Not attached to a process.\n");
@@ -124,13 +124,7 @@ namespace driver {
 			return STATUS_INVALID_PARAMETER;
 		}
 
-		//const auto exit_status = PsGetProcessExitStatus(target_process);
-
-		LARGE_INTEGER timeout_0{ 0 };
-		const auto exit_status = KeWaitForSingleObject(process_struct.eprocess, KWAIT_REASON::Executive,
-			KernelMode, FALSE, &timeout_0);
-
-		is_alive = (exit_status == STATUS_TIMEOUT);
+		is_alive = process.is_alive();
 
 		if (DEBUG_TARGET_ALIVE)
 			debug("[+] Target process is %s.\n", is_alive ? "alive" : "dead");
