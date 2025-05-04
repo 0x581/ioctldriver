@@ -15,7 +15,7 @@ void test_read(const HANDLE driver, const size_t iterations) {
 
 	const auto start_time = Time::now();
 
-	const auto module_addr = driver::get_module(driver, L"Notepad.exe");
+	const auto module_addr = driver::get_module_base(driver, L"Notepad.exe");
 
 	const auto percentage_steps = iterations / 100;
 
@@ -49,7 +49,7 @@ void test_connection(const HANDLE driver, const size_t iterations) {
 
 	const auto start_time = Time::now();
 
-	const auto module_addr = driver::get_module(driver, L"Notepad.exe");
+	const auto module_addr = driver::get_module_base(driver, L"Notepad.exe");
 
 	const auto percentage_steps = iterations / 100;
 

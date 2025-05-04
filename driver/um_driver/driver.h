@@ -62,7 +62,7 @@ namespace driver {
 		DeviceIoControl(driver_handle, codes::write, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 	}
 
-	uintptr_t get_module(HANDLE driver_handle, const wchar_t* module_name) {
+	uintptr_t get_module_base(HANDLE driver_handle, const wchar_t* module_name) {
 		Request r{ 0 };
 		r.buffer = (PVOID)module_name;
 		r.size = wcsnlen(module_name, MAX_PATH);
