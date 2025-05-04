@@ -2,6 +2,7 @@
 
 #include <ntifs.h>
 
+#include "includes/get_module.h"
 #include "includes/get_process.h"
 
 class OpenedProcess {
