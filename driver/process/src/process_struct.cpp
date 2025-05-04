@@ -26,6 +26,13 @@ void Process::Connect(PEPROCESS target_process) {
 	if (DEBUG_PROCESS_STRUCT)
 		debug("[+] Connecting to process.\n");
 
+	if (target_process == nullptr)
+	{
+		if (DEBUG_PROCESS_STRUCT)
+			debug("[-] Target process is null.\n");
+		return;
+	}
+
 	this->eprocess = target_process;
 	this->pid = processGetPid(this->eprocess);
 

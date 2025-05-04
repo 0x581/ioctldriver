@@ -104,6 +104,8 @@ namespace driver {
 		if (NT_SUCCESS(status))
 			process.Connect(target_process);
 
+		request->pid = process.pid;
+
 		if (DEBUG_ATTACH)
 		{
 			if (NT_SUCCESS(status))
