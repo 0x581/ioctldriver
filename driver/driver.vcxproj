@@ -75,11 +75,13 @@
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
     <OutDir>$(SolutionDir)build\executables\</OutDir>
     <IntDir>$(SolutionDir)build\km_intermediates\</IntDir>
+    <Inf2CatUseLocalTime>true</Inf2CatUseLocalTime>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
     <OutDir>$(SolutionDir)build\executables\</OutDir>
     <IntDir>$(SolutionDir)build\km_intermediates\</IntDir>
+    <Inf2CatUseLocalTime>true</Inf2CatUseLocalTime>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
@@ -140,14 +142,25 @@
     <FilesToPackage Include="$(TargetPath)" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\debug.cpp" />
-    <ClCompile Include="src\get_process.cpp" />
+    <ClCompile Include="kdebug\kdebug.cpp" />
+    <ClCompile Include="process\src\get_info.cpp" />
+    <ClCompile Include="process\src\get_module.cpp" />
+    <ClCompile Include="process\src\offsets.cpp" />
+    <ClCompile Include="process\src\opened_process.cpp" />
+    <ClCompile Include="process\src\virtual_to_physical.cpp" />
+    <ClCompile Include="process\src\get_process.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="windows_functions\ZwQuerySystemInformation.cpp" />
+    <ClCompile Include="windows_internals\ZwQuerySystemInformation.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="kdebug\kdebug.h" />
+    <ClInclude Include="process\includes\get_info.h" />
+    <ClInclude Include="process\includes\get_module.h" />
+    <ClInclude Include="process\includes\get_process.h" />
+    <ClInclude Include="process\includes\offsets.h" />
+    <ClInclude Include="process\includes\page_definitions.h" />
+    <ClInclude Include="process\process.h" />
     <ClInclude Include="src\driver.h" />
-    <ClInclude Include="src\debug.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
