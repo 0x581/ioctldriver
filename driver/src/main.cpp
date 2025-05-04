@@ -37,12 +37,12 @@ namespace driver {
 	}
 
 	NTSTATUS set_debug_flags(const size_t new_flags, size_t& old_flags) {
-		if (DEBUG_SET_DEBUG_FLAGS)
-			debug("[+] Setting debug flags from %p to %p.\n", DEBUG_FLAGS, new_flags);
-
 		old_flags = DEBUG_FLAGS;
 
 		DEBUG_FLAGS = new_flags;
+
+		if (DEBUG_SET_DEBUG_FLAGS)
+			debug("[+] Debug flags updated from %p to %p.\n", old_flags, DEBUG_FLAGS);
 
 		return STATUS_SUCCESS;
 	}
