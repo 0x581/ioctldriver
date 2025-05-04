@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Windows.h>
-#include "../../driver/src/driver.h"
+#include "../src/driver.h"
 
 
 namespace driver {

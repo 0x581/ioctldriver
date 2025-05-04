@@ -155,10 +155,6 @@
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="src\driver.h" />
-    <ClInclude Include="src\get_process.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

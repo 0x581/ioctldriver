@@ -83,5 +83,8 @@
     <ClInclude Include="process\includes\virtual_to_physical.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="um_driver\driver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
