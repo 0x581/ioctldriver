@@ -14,6 +14,8 @@ ULONG getBuildNumber();
 
 uintptr_t processGetIdOffset();
 
+uintptr_t processGetActiveProcessLinksOffset();
+
 uintptr_t processGetUserDirectoryTableBaseOffset();
 
 uintptr_t processGetSectionBaseAddressOffset();
@@ -21,3 +23,5 @@ uintptr_t processGetSectionBaseAddressOffset();
 uintptr_t processGetPebPtrOffset();
 
 uintptr_t processGetExitStatusOffset();
+
+uintptr_t processGetImageFilePtrOffset();

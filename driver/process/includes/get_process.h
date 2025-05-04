@@ -2,4 +2,4 @@
 
 #include <ntifs.h>
 
-NTSTATUS findProcessIdByName(const PWCHAR process_name, HANDLE& pid);
+NTSTATUS findProcessByName(const PWCHAR process_name, PEPROCESS& peprocess_out);

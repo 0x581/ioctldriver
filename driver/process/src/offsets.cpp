@@ -61,6 +61,18 @@ uintptr_t processGetIdOffset() {
 	{
 		offset = 0x1d0;
 	}
+
+	return offset;
+}
+
+uintptr_t processGetActiveProcessLinksOffset() {
+	static uintptr_t offset = 0x0;
+
+	if (offset != 0x0)
+		return offset;
+
+	offset = processGetIdOffset() + 0x8;
+
 	return offset;
 }
 
@@ -108,6 +120,7 @@ uintptr_t processGetSectionBaseAddressOffset() {
 	{
 		offset = 0x2b0;
 	}
+
 	return offset;
 }
 
@@ -162,6 +175,30 @@ uintptr_t processGetExitStatusOffset() {
 	else
 	{
 		offset = 0x554;
+	}
+
+	return offset;
+}
+
+uintptr_t processGetImageFilePtrOffset() {
+	static uintptr_t offset = 0x0;
+
+	if (offset != 0x0)
+		return offset;
+
+	const auto version_num = getBuildNumber();
+
+	if (version_num <= WINDOWS_1909)
+	{
+		offset = 0x448;
+	}
+	else if (version_num <= WINDOWS_11_23H2)
+	{
+		offset = 0x5a0;
+	}
+	else
+	{
+		offset = 0x330;
 	}
 
 	return offset;

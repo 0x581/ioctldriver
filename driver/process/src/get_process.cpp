@@ -2,118 +2,75 @@
 
 #include "../includes/get_process.h"
 
+#include "../includes/offsets.h"
+
 #include "kdebug.h"
 
-#include "../../windows_internals/ZwQuerySystemInformation.cpp"
+void GetBasePathUnicodeString(PUNICODE_STRING full_path, PUNICODE_STRING base_path) {
+	USHORT length = full_path->Length / sizeof(WCHAR);
+	PWCH buffer = full_path->Buffer;
 
-#define POOL_TAG 'QdpA' // AssPileDriver Query
+	USHORT base_length = 0;
+	PWCH base_buffer_start = buffer;
 
+	USHORT idx = length;
 
-NTSTATUS findProcessIdByName(const PWCHAR process_name, HANDLE& pid) {
-	NTSTATUS status;
-
-	ULONG buffer_size = 0;
-	PVOID buffer = NULL;
-
-
-	PSYSTEM_PROCESS_INFORMATION processInfo;
-	BOOLEAN found = FALSE;
-
-	UNICODE_STRING unicode_name;
-	RtlInitUnicodeString(&unicode_name, process_name);
-	if (unicode_name.Buffer == nullptr)
+	do
 	{
-		if (DEBUG_ATTACH)
-			debug("[-] Invalid process name specified\n");
+		--idx;
 
-		return STATUS_INVALID_PARAMETER;
-	}
-
-
-	status = ZwQuerySystemInformation(SystemProcessInformation, NULL, 0, &buffer_size);
-
-	if (status != STATUS_INFO_LENGTH_MISMATCH || buffer_size == 0)
-	{
-		if (DEBUG_ATTACH)
-			debug("[-] ZwQuerySystemInformation (size query) failed or returned zero size: 0x%X\n", status);
-
-		return (status == STATUS_SUCCESS) ? STATUS_UNEXPECTED_IO_ERROR : status;
-	}
-
-	// Extra buffer to accound for newly opened processes
-	buffer_size += 1024 * 10;
-
-	buffer = ExAllocatePool2(POOL_FLAG_PAGED, buffer_size, POOL_TAG);
-
-	if (buffer == nullptr)
-	{
-		if (DEBUG_ATTACH)
-			debug("[-] ExAllocatePool2 failed to allocate %lu bytes\n", buffer_size);
-
-		return STATUS_INSUFFICIENT_RESOURCES;
-	}
-
-	// --- Step 3: Query actual system process information ---
-	status = ZwQuerySystemInformation(SystemProcessInformation, buffer, buffer_size, &buffer_size); // Can reuse bufferSize to get actual returned length if needed
-
-	if (!NT_SUCCESS(status) || buffer_size == 0)
-	{
-		if (DEBUG_ATTACH)
-			debug("[-] ZwQuerySystemInformation(data query) failed or returned zero size : 0x%X\n", status);
-
-		ExFreePool(buffer);
-		return status;
-	}
-
-	processInfo = (PSYSTEM_PROCESS_INFORMATION)buffer;
-
-	while (true)
-	{
-		if (processInfo->ImageName.Buffer && processInfo->ImageName.Length > 0)
-		{
-			if (RtlCompareUnicodeString(&processInfo->ImageName, &unicode_name, TRUE) == 0)
-			{
-				found = TRUE;
-				break;
-			}
-		}
-
-		if (processInfo->NextEntryOffset == 0)
+		if (buffer[idx] == L'\\')
 			break;
 
-		ULONG_PTR nextOffset = (ULONG_PTR)processInfo + processInfo->NextEntryOffset;
+		base_length++;
+		base_buffer_start = &buffer[idx];
 
-		if (nextOffset >= (ULONG_PTR)buffer + buffer_size)
+	} while (idx > 0);
+
+	base_path->Length = base_length * sizeof(WCHAR);
+	base_path->MaximumLength = base_length * sizeof(WCHAR);
+	base_path->Buffer = base_buffer_start;
+}
+
+NTSTATUS findProcessByName(const PWCHAR process_name, PEPROCESS& peprocess_out) {
+	UNICODE_STRING process_name_unicode = { 0 };
+	RtlInitUnicodeString(&process_name_unicode, process_name);
+
+	const auto activeProcessLinksOffset = processGetActiveProcessLinksOffset();
+	const auto imageFilePtrOffset = processGetImageFilePtrOffset();
+
+	const PLIST_ENTRY start_address = PLIST_ENTRY((uintptr_t)PsInitialSystemProcess + activeProcessLinksOffset);
+
+	PLIST_ENTRY entry = start_address;
+
+	while (entry != nullptr && entry->Flink != start_address)
+	{
+		PEPROCESS pEprocess = (PEPROCESS)((uintptr_t)entry - activeProcessLinksOffset);
+
+		PFILE_OBJECT file_object = (PFILE_OBJECT)((uintptr_t)pEprocess + imageFilePtrOffset);
+
+		UNICODE_STRING base_path = { 0 };
+		GetBasePathUnicodeString(&file_object->FileName, &base_path);
+
+		if (RtlEqualUnicodeString(&base_path, &process_name_unicode, TRUE))
 		{
-			if (DEBUG_ATTACH)
-				debug("[-] NextEntryOffset points outside buffer!\n");
+			ObReferenceObject(pEprocess);
 
-			status = STATUS_INFO_LENGTH_MISMATCH;
-			break;
+			peprocess_out = pEprocess;
+
+			if (DEBUG_GET_MODULE)
+				debug("[+] Found process %wZ at address 0x%llX\n", &process_name_unicode, peprocess_out);
+
+			return STATUS_SUCCESS;
 		}
 
-		processInfo = (PSYSTEM_PROCESS_INFORMATION)((char*)processInfo + processInfo->NextEntryOffset);
+		entry = entry->Flink;
 	}
 
-	if (found)
-	{
-		pid = processInfo->UniqueProcessId;
+	peprocess_out = nullptr;
 
-		if (DEBUG_ATTACH)
-			debug("[+] Found process %wZ (PID %d)\n", &processInfo->ImageName, pid);
-	}
-	else
-	{
-		pid = 0;
+	if (DEBUG_GET_MODULE)
+		debug("[-] Unable to find process %wZ\n", &process_name_unicode);
 
-		if (DEBUG_ATTACH)
-			debug("[-] Process %wZ not found\n", &unicode_name);
-	}
-
-	ExFreePool(buffer);
-
-	if (!found)
-		return STATUS_NOT_FOUND;
-
-	return status;
+	return STATUS_UNSUCCESSFUL;
 }

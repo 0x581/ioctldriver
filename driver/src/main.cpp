@@ -89,25 +89,30 @@ namespace driver {
 		return status;
 	}
 
-	NTSTATUS attach(Process& process, const PWCHAR process_name) {
+	NTSTATUS attach_name(Process& process, Request* request) {
 		if (process.Connected())
 			unattach(process);
 
+		const PWCHAR process_name = static_cast<PWCHAR>(request->buffer);
+
 		if (DEBUG_ATTACH)
-			debug("[+] Looking up process: %ws\n", process_name);
+			debug("[+] Attaching to process: %ws\n", process_name);
 
-		HANDLE pid = 0;
+		PEPROCESS target_process = nullptr;
+		NTSTATUS status = findProcessByName(process_name, target_process);
 
-		NTSTATUS status = findProcessIdByName(process_name, pid);
+		if (NT_SUCCESS(status))
+			process.Connect(target_process);
 
-		if (!NT_SUCCESS(status))
+		if (DEBUG_ATTACH)
 		{
-			if (DEBUG_ATTACH)
-				debug("[-] Failed to find process: %ws\n", process_name);
-			return status;
+			if (NT_SUCCESS(status))
+				debug("[+] Attached to process: %ws (PID %d)\n", process_name, process.pid);
+			else
+				debug("[-] Failed to attach to process: %ws\n", process_name);
 		}
 
-		return attach(process, pid);
+		return status;
 	}
 
 	NTSTATUS process_is_alive(Process& process, SIZE_T& is_alive) {
@@ -213,7 +218,7 @@ namespace driver {
 			status = attach(target_process, request->process_id);
 			break;
 		case codes::attach_name:
-			status = attach(target_process, (PWCHAR)request->buffer);
+			status = attach_name(target_process, request);
 			break;
 		case codes::unattach:
 			status = unattach(target_process);
