@@ -7,11 +7,12 @@
 
 #include <Windows.h>
 #include <chrono>
+#include <thread>
 
 typedef std::chrono::high_resolution_clock Time;
 typedef std::chrono::milliseconds ms;
 
-void run_function(const HANDLE driver, const size_t pid, const size_t iterations) {
+void test_read(const HANDLE driver, const DWORD pid, const size_t iterations) {
 
 	const auto start_time = Time::now();
 
@@ -19,24 +20,19 @@ void run_function(const HANDLE driver, const size_t pid, const size_t iterations
 
 	const auto percentage_steps = iterations / 100;
 
+	char buffer[4096] = { 0 };
+
 	auto i = 1;
-
-	struct Data {
-		char data[4096];
-	};
-
-	char buffer[sizeof(Data)] = { 0 };
-
 	for (; i <= iterations; ++i)
 	{
-		//const auto alive = driver::do_nothing(driver);
 		driver::read_memory<size_t>(driver, module_addr + 0x10);
 
-		if (i % (percentage_steps * 5) == 0)
-		{
-			const int percentage = i / percentage_steps;
-			std::cout << percentage << "%" << std::endl;
-		}
+		if (iterations > 100)
+			if (i % (percentage_steps * 5) == 0)
+			{
+				const auto percentage = i / percentage_steps;
+				std::cout << percentage << "%" << std::endl;
+			}
 	}
 
 	--i;
@@ -47,8 +43,45 @@ void run_function(const HANDLE driver, const size_t pid, const size_t iterations
 
 	std::cout << "Elapsed time: " << elapsed_time.count() << " seconds\n";
 	std::cout << (size_t)(i / elapsed_time.count()) << " ops/s (" << i << "ops / " << elapsed_time.count() << "s)\n";
-
 }
+
+
+void test_connection(const HANDLE driver, const DWORD pid, const size_t iterations) {
+
+	const auto start_time = Time::now();
+
+	const auto module_addr = get_module_base(pid, L"Notepad.exe");
+
+	const auto percentage_steps = iterations / 100;
+
+	auto i = 1;
+	for (; i <= iterations; ++i)
+	{
+		driver::process_is_alive(driver);
+
+		//std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+		if (iterations > 100)
+			if (i % (percentage_steps * 5) == 0)
+			{
+				const auto percentage = i / percentage_steps;
+				std::cout << percentage << "%" << std::endl;
+			}
+	}
+
+	--i;
+
+	const auto end_time = Time::now();
+
+	const std::chrono::duration<float> elapsed_time = end_time - start_time;
+
+	std::cout << "Elapsed time: " << elapsed_time.count() << " seconds\n";
+	std::cout << (size_t)(i / elapsed_time.count()) << " ops/s (" << i << "ops / " << elapsed_time.count() << "s)\n";
+}
+
+
+
+
 
 int main() {
 	const HANDLE driver = CreateFile(L"\\\\.\\AssPileDriver", GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
@@ -60,16 +93,17 @@ int main() {
 		return 1;
 	}
 
+	const auto old_debug_level = driver::set_debug_flags(driver, DEFAULT_FLAGS);
 
-	const auto old_debug_level = driver::set_debug_level(driver, DEFAULT_FLAGS);
+	const auto success = driver::attach_to_process(driver, L"Notepad.exe");
 
-	const auto pid = driver::attach_to_process(driver, L"Notepad.exe");
-
-	if (pid)
+	if (success)
 	{
 		std::cout << "Attachment successful.\n";
-		run_function(driver, pid, 10000000);
+		test_connection(driver, getPID(L"Notepad.exe"), 20);
 	}
+	else
+		std::cout << "Failed to attach to process.\n";
 
 	const auto unattach_success = driver::unattach_from_process(driver);
 
