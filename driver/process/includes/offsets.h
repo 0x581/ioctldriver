@@ -2,11 +2,13 @@
 
 #include <ntifs.h>
 
-constexpr auto DirectoryTableBaseOffset = 0x28;
+constexpr auto KernelDirectoryTableBaseOffset = 0x28;
 
 RTL_OSVERSIONINFOW& getVersionInfo();
 
 ULONG getBuildNumber();
+
+uintptr_t getProcessIdOffset();
 
 uintptr_t getUserDirectoryTableBaseOffset();
 

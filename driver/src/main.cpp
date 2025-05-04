@@ -80,21 +80,21 @@ namespace driver {
 
 		if (DEBUG_ATTACH)
 		{
-			if (!NT_SUCCESS(status))
-				debug("[-] Failed to attach to process (%d).\n", pid);
-			else
+			if (NT_SUCCESS(status))
 				debug("[+] Attached to process (%d).\n", pid);
+			else
+				debug("[-] Failed to attach to process (%d).\n", pid);
 		}
 
 		return status;
 	}
 
-	NTSTATUS attach(Process& process_struct, const PWCHAR process_name) {
-		if (process_struct.Connected())
-			unattach(process_struct);
+	NTSTATUS attach(Process& process, const PWCHAR process_name) {
+		if (process.Connected())
+			unattach(process);
 
 		if (DEBUG_ATTACH)
-			debug("[+] Attaching to process (%ws).\n", process_name);
+			debug("[+] Looking up process: %ws\n", process_name);
 
 		HANDLE pid = 0;
 
@@ -103,11 +103,11 @@ namespace driver {
 		if (!NT_SUCCESS(status))
 		{
 			if (DEBUG_ATTACH)
-				debug("[-] Failed to find process (%ws).\n", process_name);
+				debug("[-] Failed to find process: %ws\n", process_name);
 			return status;
 		}
 
-		return attach(process_struct, pid);
+		return attach(process, pid);
 	}
 
 	NTSTATUS process_is_alive(Process& process, SIZE_T& is_alive) {

@@ -21,9 +21,7 @@ namespace driver {
 		Request r;
 		r.buffer = (PVOID)process_name;
 
-		DeviceIoControl(driver_handle, codes::attach_name, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
-
-		return r.return_value;
+		return DeviceIoControl(driver_handle, codes::attach_name, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 	}
 
 	bool unattach_from_process(HANDLE driver_handle) {

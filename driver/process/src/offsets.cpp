@@ -37,6 +37,33 @@ ULONG getBuildNumber() {
 	return ver.dwBuildNumber;
 }
 
+uintptr_t getProcessIdOffset() {
+	static uintptr_t offset = 0x0;
+
+	if (offset != 0x0)
+		return offset;
+
+	const auto version_num = getBuildNumber();
+
+	if (version_num <= WINDOWS_1809)
+	{
+		offset = 0x2e0;
+	}
+	else if (version_num <= WINDOWS_1909)
+	{
+		offset = 0x2e8;
+	}
+	else if (version_num <= WINDOWS_11_23H2)
+	{
+		offset = 0x440;
+	}
+	else
+	{
+		offset = 0x1d0;
+	}
+	return offset;
+}
+
 uintptr_t getUserDirectoryTableBaseOffset() {
 	static uintptr_t offset = 0x0;
 

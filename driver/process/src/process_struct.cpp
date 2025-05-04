@@ -23,24 +23,24 @@ void Process::Connect(PEPROCESS target_process) {
 	if (this->Connected())
 		this->Clear();
 
-	if (DEBUG_ATTACH)
+	if (DEBUG_PROCESS_STRUCT)
 		debug("[+] Connecting to process.\n");
 
 	this->eprocess = target_process;
-	this->pid = PsGetProcessId(target_process);
+	this->pid = getProcessId(this->eprocess);
 
 	this->cr3 = getProcessCr3(this->eprocess);
 	this->exit_status = getProcessExitStatusAddress(this->eprocess);
 
 	this->process_section_base_address = getProcessBaseAddress(this->eprocess);
 
-	if (DEBUG_ATTACH)
+	if (DEBUG_PROCESS_STRUCT)
 		debug(
 			"[+] Connected:\n"
 			"[+]    PID: %d\n"
-			"[+]    CR3: %p\n"
-			"[+]    Exit status: %p\n"
-			"[+]    Process section base address: %p\n",
+			"[+]    CR3: 0x%p\n"
+			"[+]    Exit status: 0x%p\n"
+			"[+]    Process section base address: 0x%p\n",
 			this->pid,
 			this->cr3,
 			this->exit_status,
@@ -68,26 +68,5 @@ bool Process::is_alive() const {
 	if (!this->Connected())
 		return false;
 
-	const LONG status = *this->exit_status;
-
-	const auto real_status = PsGetProcessExitStatus(this->eprocess);
-
-	LARGE_INTEGER timeout_0{ 0 };
-	const auto ke_status = KeWaitForSingleObject(this->eprocess, KWAIT_REASON::Executive,
-		KernelMode, FALSE, &timeout_0);
-
-	const auto is_alive = (ke_status == STATUS_TIMEOUT);
-
-
-	if (real_status != status)
-	{
-		debug("[!] Fetched wrong status code vs PsGetProcessExitStatus in is_alive()!");
-	}
-
-	if (is_alive != (status == STATUS_PENDING))
-	{
-		debug("[!] Fetched wrong status code vs KeWaitForSingleObject in is_alive()!");
-	}
-
-	return status == STATUS_PENDING;
+	return (*this->exit_status == STATUS_PENDING);
 }
