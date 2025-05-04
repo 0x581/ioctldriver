@@ -15,12 +15,12 @@ Process::Process() :
 	process_section_base_address{ 0 },
 	pPeb{ nullptr } {}
 
-bool Process::Connected() const {
+bool Process::Attached() const {
 	return eprocess != nullptr;
 }
 
 void Process::Connect(PEPROCESS target_process) {
-	if (this->Connected())
+	if (this->Attached())
 		this->Clear();
 
 	if (DEBUG_PROCESS_STRUCT)
@@ -74,7 +74,7 @@ void Process::Clear() {
 }
 
 bool Process::is_alive() const {
-	if (!this->Connected())
+	if (!this->Attached())
 		return false;
 
 	return (*this->exit_status == STATUS_PENDING);

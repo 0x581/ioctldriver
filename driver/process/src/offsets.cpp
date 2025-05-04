@@ -6,12 +6,12 @@
 
 
 //https://ntdiff.github.io/
-constexpr auto WINDOWS_1803 = 17134;
-constexpr auto WINDOWS_1809 = 17763;
-constexpr auto WINDOWS_1903 = 18362;
-constexpr auto WINDOWS_1909 = 18363;
-constexpr auto WINDOWS_2004 = 19041;
-constexpr auto WINDOWS_20H2 = 19569;
+constexpr auto WINDOWS_10_1803 = 17134;
+constexpr auto WINDOWS_10_1809 = 17763;
+constexpr auto WINDOWS_10_1903 = 18362;
+constexpr auto WINDOWS_10_1909 = 18363;
+constexpr auto WINDOWS_10_2004 = 19041;
+constexpr auto WINDOWS_10_20H2 = 19569;
 constexpr auto WINDOWS_10_22H2 = 19041;
 constexpr auto WINDOWS_11_23H2 = 22621;
 constexpr auto WINDOWS_11_24H2 = 26100;
@@ -24,7 +24,7 @@ RTL_OSVERSIONINFOW& getVersionInfo() {
 	{
 		RtlGetVersion(&ver);
 
-		if (ver.dwBuildNumber < WINDOWS_1803)
+		if (ver.dwBuildNumber < WINDOWS_10_1803)
 			debug("[!] Driver is bein ran on an unsupported system! (Build Number: %d)\n", ver.dwBuildNumber);
 	}
 
@@ -45,11 +45,11 @@ uintptr_t processGetIdOffset() {
 
 	const auto version_num = getBuildNumber();
 
-	if (version_num <= WINDOWS_1809)
+	if (version_num <= WINDOWS_10_1809)
 	{
 		offset = 0x2e0;
 	}
-	else if (version_num <= WINDOWS_1909)
+	else if (version_num <= WINDOWS_10_1909)
 	{
 		offset = 0x2e8;
 	}
@@ -84,11 +84,11 @@ uintptr_t processGetUserDirectoryTableBaseOffset() {
 
 	const auto version_num = getBuildNumber();
 
-	if (version_num <= WINDOWS_1809)
+	if (version_num <= WINDOWS_10_1809)
 	{
 		offset = 0x278;
 	}
-	else if (version_num <= WINDOWS_1909)
+	else if (version_num <= WINDOWS_10_1909)
 	{
 		offset = 0x280;
 	}
@@ -132,11 +132,11 @@ uintptr_t processGetPebPtrOffset() {
 
 	const auto version_num = getBuildNumber();
 
-	if (version_num <= WINDOWS_1809)
+	if (version_num <= WINDOWS_10_1809)
 	{
 		offset = 0x624;
 	}
-	else if (version_num <= WINDOWS_1909)
+	else if (version_num <= WINDOWS_10_1909)
 	{
 		offset = 0x3f8;
 	}
@@ -160,11 +160,11 @@ uintptr_t processGetExitStatusOffset() {
 
 	const auto version_num = getBuildNumber();
 
-	if (version_num <= WINDOWS_1809)
+	if (version_num <= WINDOWS_10_1809)
 	{
 		offset = 0x624;
 	}
-	else if (version_num <= WINDOWS_1909)
+	else if (version_num <= WINDOWS_10_1909)
 	{
 		offset = 0x654;
 	}
@@ -188,7 +188,7 @@ uintptr_t processGetImageFilePtrOffset() {
 
 	const auto version_num = getBuildNumber();
 
-	if (version_num <= WINDOWS_1909)
+	if (version_num <= WINDOWS_10_1909)
 	{
 		offset = 0x448;
 	}

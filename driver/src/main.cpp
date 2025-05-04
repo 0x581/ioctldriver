@@ -51,7 +51,7 @@ namespace driver {
 		if (DEBUG_UNATTACH)
 			debug("[+] Unattaching from process.\n");
 
-		if (!process.Connected())
+		if (!process.Attached())
 		{
 			if (DEBUG_UNATTACH)
 				debug("[-] Not attached to a process.\n");
@@ -67,7 +67,7 @@ namespace driver {
 	}
 
 	NTSTATUS attach(Process& process, Request* request) {
-		if (process.Connected())
+		if (process.Attached())
 			unattach(process);
 
 		const PWCHAR process_name = static_cast<PWCHAR>(request->buffer);
@@ -98,7 +98,7 @@ namespace driver {
 		if (DEBUG_TARGET_ALIVE)
 			debug("[+] Checking if target process is alive.\n");
 
-		if (!process.Connected())
+		if (!process.Attached())
 		{
 			if (DEBUG_TARGET_ALIVE)
 				debug("[-] Not attached to a process.\n");
@@ -125,7 +125,7 @@ namespace driver {
 		if (DEBUG_READ)
 			debug("[+] Reading %d bytes from %p to %p.\n", size, source, destination);
 
-		if (!process.Connected())
+		if (!process.Attached())
 		{
 			if (DEBUG_READ)
 				debug("[-] Not attached to a procss.\n");
@@ -151,7 +151,7 @@ namespace driver {
 		if (DEBUG_WRITE)
 			debug("[+] Writing %d bytes from %p to %p.\n", size, source, destination);
 
-		if (!process.Connected())
+		if (!process.Attached())
 		{
 			if (DEBUG_READ)
 				debug("[-] Not attached to a procss.\n");

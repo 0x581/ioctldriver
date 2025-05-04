@@ -59,7 +59,7 @@ void test_connection(const HANDLE driver, const size_t iterations) {
 	{
 		driver::process_is_alive(driver);
 
-		//std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
 		if (iterations > 100)
 			if (i % (percentage_steps * 5) == 0)
@@ -102,8 +102,8 @@ int main() {
 	{
 		std::cout << "Attachment successful.\n";
 
-		//test_connection(driver, 100000);
-		test_read(driver, 100000);
+		test_connection(driver, 300);
+		//test_read(driver, 100000);
 	}
 	else
 		std::cout << "Failed to attach to process.\n";

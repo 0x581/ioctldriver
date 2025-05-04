@@ -40,7 +40,7 @@ NTSTATUS findModuleBaseAddress(Process& process, PCWCHAR module_name, uintptr_t&
 	LDR_DATA_TABLE_ENTRY entry = { 0 };
 	ReadProcessMemory(process, (PVOID)start_address, &entry, sizeof(PLIST_ENTRY));
 
-	WCHAR buffer[MAX_PATH + 1] = { 0 };;
+	WCHAR buffer[MAX_PATH + 1] = { 0 };
 
 	do
 	{

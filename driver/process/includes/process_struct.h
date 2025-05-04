@@ -17,7 +17,7 @@ private:
 public:
 	Process();
 
-	bool Connected() const;
+	bool Attached() const;
 
 	void Connect(PEPROCESS target_process);
 

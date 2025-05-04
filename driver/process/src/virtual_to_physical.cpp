@@ -8,15 +8,19 @@
 
 
 NTSTATUS ReadPhysicalAddress(uintptr_t TargetAddress, PVOID lpBuffer, size_t Size, size_t* BytesRead) {
+	if (!TargetAddress || !lpBuffer || !BytesRead)
+		return STATUS_INVALID_PARAMETER;
+
 	MM_COPY_ADDRESS AddrToRead = { 0 };
 	AddrToRead.PhysicalAddress.QuadPart = TargetAddress;
 
 	return MmCopyMemory(lpBuffer, AddrToRead, Size, MM_COPY_MEMORY_PHYSICAL, BytesRead);
 }
 
+
 //MmMapIoSpaceEx limit is page 4096 byte
 NTSTATUS WritePhysicalAddress(uintptr_t TargetAddress, PVOID lpBuffer, size_t Size, size_t* BytesWritten) {
-	if (!TargetAddress)
+	if (!TargetAddress || !lpBuffer || !BytesWritten)
 		return STATUS_INVALID_PARAMETER;
 
 	PHYSICAL_ADDRESS AddrToWrite = { 0 };
@@ -143,18 +147,6 @@ uintptr_t TranslateLinearAddress(uintptr_t pml4, VirtualAddress vAddr) {
 		debug("[+]   Page address: 0x%p\n", pml1e.get_address());
 
 	return pml1e.get_address() + vAddr.get_offset();
-}
-
-NTSTATUS ReadVirtual(uintptr_t dirbase, uintptr_t address, PVOID buffer, size_t size, size_t* read) {
-	uintptr_t pAddress = TranslateLinearAddress(dirbase, address);
-
-	return ReadPhysicalAddress(pAddress, buffer, size, read);
-}
-
-NTSTATUS WriteVirtual(uintptr_t dirbase, uintptr_t address, PVOID buffer, size_t size, size_t* written) {
-	uintptr_t pAddress = TranslateLinearAddress(dirbase, address);
-
-	return WritePhysicalAddress(pAddress, buffer, size, written);
 }
 
 
