@@ -66,30 +66,7 @@ namespace driver {
 		return STATUS_SUCCESS;
 	}
 
-	NTSTATUS attach_pid(Process& process, Request* request) {
-		if (process.Connected())
-			unattach(process);
-
-		if (DEBUG_ATTACH)
-			debug("[+] Attaching to process (%d).\n", request->pid);
-
-		PEPROCESS target_process = nullptr;
-		NTSTATUS status = PsLookupProcessByProcessId(request->pid, &target_process);
-
-		process.Connect(target_process);
-
-		if (DEBUG_ATTACH)
-		{
-			if (NT_SUCCESS(status))
-				debug("[+] Attached to process (%d).\n", request->pid);
-			else
-				debug("[-] Failed to attach to process (%d).\n", request->pid);
-		}
-
-		return status;
-	}
-
-	NTSTATUS attach_name(Process& process, Request* request) {
+	NTSTATUS attach(Process& process, Request* request) {
 		if (process.Connected())
 			unattach(process);
 
@@ -229,11 +206,9 @@ namespace driver {
 		case codes::nothing:
 			status = STATUS_SUCCESS;
 			break;
-		case codes::attach_pid:
-			status = attach_name(target_process, request);
 			break;
-		case codes::attach_name:
-			status = attach_name(target_process, request);
+		case codes::attach:
+			status = attach(target_process, request);
 			break;
 		case codes::unattach:
 			status = unattach(target_process);

@@ -10,20 +10,11 @@ namespace driver {
 		return DeviceIoControl(driver_handle, codes::nothing, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 	}
 
-	bool attach_to_process(HANDLE driver_handle, const DWORD pid) {
-		const uintptr_t process_id = (uintptr_t)pid;
-
-		Request r{ 0 };
-		r.process_id = reinterpret_cast<HANDLE>(process_id);
-
-		return DeviceIoControl(driver_handle, codes::attach_pid, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
-	}
-
 	bool attach_to_process(HANDLE driver_handle, const PCWCHAR process_name) {
 		Request r{ 0 };
 		r.buffer = (PVOID)process_name;
 
-		return DeviceIoControl(driver_handle, codes::attach_name, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
+		return DeviceIoControl(driver_handle, codes::attach, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 	}
 
 	bool unattach_from_process(HANDLE driver_handle) {
@@ -43,7 +34,7 @@ namespace driver {
 		T temp = {};
 
 		Request r{ 0 };
-		r.target_address = reinterpret_cast<PVOID>(addr);
+		r.address = reinterpret_cast<PVOID>(addr);
 		r.buffer = &temp;
 		r.size = sizeof(T);
 
@@ -54,7 +45,7 @@ namespace driver {
 
 	size_t read_memory(HANDLE driver_handle, const uintptr_t addr, PVOID buffer, const size_t size) {
 		Request r{ 0 };
-		r.target_address = reinterpret_cast<PVOID>(addr);
+		r.address = reinterpret_cast<PVOID>(addr);
 		r.buffer = buffer;
 		r.size = size;
 		DeviceIoControl(driver_handle, codes::read, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
@@ -64,7 +55,7 @@ namespace driver {
 	template <class T>
 	void write_memory(HANDLE driver_handle, const uintptr_t addr, const T& value) {
 		Request r{ 0 };
-		r.target_address = reinterpret_cast<PVOID>(addr);
+		r.address = reinterpret_cast<PVOID>(addr);
 		r.buffer = (PVOID)&value;
 		r.size = sizeof(T);
 
