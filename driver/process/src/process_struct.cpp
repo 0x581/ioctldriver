@@ -38,11 +38,11 @@ void Process::Connect(PEPROCESS target_process) {
 	if (DEBUG_PROCESS_STRUCT)
 		debug(
 			"[+] Connected:\n"
-			"[+]    PID: %d\n"
-			"[+]    CR3: 0x%p\n"
-			"[+]    Exit status: 0x%p\n"
-			"[+]    PEB: 0x%p\n"
-			"[+]    Process section base address: 0x%p\n",
+			"[+]     PID: %d\n"
+			"[+]     CR3: 0x%p\n"
+			"[+]     Exit status: 0x%p\n"
+			"[+]     PEB: 0x%p\n"
+			"[+]     Process section base address: 0x%p\n",
 			this->pid,
 			this->cr3,
 			this->exit_status,
