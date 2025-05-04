@@ -15,6 +15,8 @@ private:
 	PLONG exit_status;
 
 	uintptr_t process_section_base_address;
+
+	uintptr_t pPeb;
 public:
 	Process();
 

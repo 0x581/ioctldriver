@@ -33,6 +33,7 @@ void Process::Connect(PEPROCESS target_process) {
 	this->exit_status = getProcessExitStatusAddress(this->eprocess);
 
 	this->process_section_base_address = getProcessBaseAddress(this->eprocess);
+	this->pPeb = getProcessPebPtr(this->eprocess);
 
 	if (DEBUG_PROCESS_STRUCT)
 		debug(

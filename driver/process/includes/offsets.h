@@ -10,8 +10,10 @@ ULONG getBuildNumber();
 
 uintptr_t getProcessIdOffset();
 
-uintptr_t getUserDirectoryTableBaseOffset();
+uintptr_t getProcessUserDirectoryTableBaseOffset();
 
 uintptr_t getProcessSectionBaseAddressOffset();
+
+uintptr_t getProcessPebPtrOffset();
 
 uintptr_t getProcessExitStatusOffset();

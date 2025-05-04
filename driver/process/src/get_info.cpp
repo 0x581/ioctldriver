@@ -6,7 +6,7 @@
 
 #include "kdebug.h"
 
-constexpr uintptr_t CR3_MASK = ~(PAGE_SIZE - 1);
+#define CR3_MASK ~(PAGE_SIZE - 1);
 
 HANDLE getProcessId(PEPROCESS pProcess) {
 	uintptr_t process = (uintptr_t)pProcess;
@@ -28,7 +28,7 @@ uintptr_t getProcessCr3(PEPROCESS pProcess) {
 	if (kernel_dirbase != 0)
 		return kernel_dirbase;
 
-	uintptr_t user_dirbase = *(uintptr_t*)(process + getUserDirectoryTableBaseOffset()) & CR3_MASK;
+	uintptr_t user_dirbase = *(uintptr_t*)(process + getProcessUserDirectoryTableBaseOffset()) & CR3_MASK;
 
 	if (DEBUG_PROCESS_STRUCT)
 		debug("[~] Getting process user CR3: 0x%p\n", user_dirbase);
@@ -51,6 +51,14 @@ uintptr_t getProcessBaseAddress(PEPROCESS pProcess) {
 	uintptr_t Base = *(uintptr_t*)(process + getProcessSectionBaseAddressOffset());
 
 	return Base;
+}
+
+uintptr_t getProcessPebPtr(PEPROCESS pProcess) {
+	uintptr_t process = (uintptr_t)pProcess;
+
+	uintptr_t pPeb = *(uintptr_t*)(process + getProcessPebPtrOffset());
+
+	return pPeb;
 }
 
 PLONG getProcessExitStatusAddress(PEPROCESS pProcess) {

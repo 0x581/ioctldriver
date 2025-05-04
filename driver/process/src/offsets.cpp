@@ -64,7 +64,7 @@ uintptr_t getProcessIdOffset() {
 	return offset;
 }
 
-uintptr_t getUserDirectoryTableBaseOffset() {
+uintptr_t getProcessUserDirectoryTableBaseOffset() {
 	static uintptr_t offset = 0x0;
 
 	if (offset != 0x0)
@@ -108,6 +108,34 @@ uintptr_t getProcessSectionBaseAddressOffset() {
 	{
 		offset = 0x2b0;
 	}
+	return offset;
+}
+
+uintptr_t getProcessPebPtrOffset() {
+	static uintptr_t offset = 0x0;
+
+	if (offset != 0x0)
+		return offset;
+
+	const auto version_num = getBuildNumber();
+
+	if (version_num <= WINDOWS_1809)
+	{
+		offset = 0x624;
+	}
+	else if (version_num <= WINDOWS_1909)
+	{
+		offset = 0x3f8;
+	}
+	else if (version_num <= WINDOWS_11_23H2)
+	{
+		offset = 0x550;
+	}
+	else
+	{
+		offset = 0x2e0;
+	}
+
 	return offset;
 }
 

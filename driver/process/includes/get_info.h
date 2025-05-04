@@ -10,4 +10,6 @@ uintptr_t getKernelDirBase();
 
 uintptr_t getProcessBaseAddress(PEPROCESS pProcess);
 
+uintptr_t getProcessPebPtr(PEPROCESS pProcess);
+
 PLONG getProcessExitStatusAddress(PEPROCESS pProcess);
