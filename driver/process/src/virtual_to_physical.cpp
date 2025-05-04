@@ -188,7 +188,9 @@ NTSTATUS ReadProcessMemory(Process& process, PVOID Address, PVOID AllocatedBuffe
 			break;
 	}
 
-	*read = bytes_read;
+	if (read != nullptr)
+		*read = bytes_read;
+
 	return status;
 }
 

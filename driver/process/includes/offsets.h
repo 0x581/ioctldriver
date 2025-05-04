@@ -6,6 +6,8 @@ constexpr auto KernelDirectoryTableBaseOffset = 0x28;
 
 constexpr auto pebLdrOffset = 0x18;
 
+constexpr auto ldrInLoadOrderModuleListOffset = 0x10;
+
 RTL_OSVERSIONINFOW& getVersionInfo();
 
 ULONG getBuildNumber();
