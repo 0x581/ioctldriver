@@ -157,10 +157,9 @@ NTSTATUS WriteVirtual(uintptr_t dirbase, uintptr_t address, PVOID buffer, size_t
 	return WritePhysicalAddress(pAddress, buffer, size, written);
 }
 
-//
-NTSTATUS ReadProcessMemory(Process& process, PVOID Address, PVOID AllocatedBuffer, size_t size, size_t* read) {
-	uintptr_t process_cr3 = process.cr3;
 
+//
+NTSTATUS ReadProcessMemory(uintptr_t process_cr3, PVOID Address, PVOID AllocatedBuffer, size_t size, size_t* read) {
 	NTSTATUS status = STATUS_UNSUCCESSFUL;
 
 	size_t bytes_read = 0;
@@ -192,6 +191,10 @@ NTSTATUS ReadProcessMemory(Process& process, PVOID Address, PVOID AllocatedBuffe
 		*read = bytes_read;
 
 	return status;
+}
+
+NTSTATUS ReadProcessMemory(Process& process, PVOID Address, PVOID AllocatedBuffer, size_t size, size_t* read) {
+	return ReadProcessMemory(process.cr3, Address, AllocatedBuffer, size, read);
 }
 
 NTSTATUS WriteProcessMemory(Process& process, PVOID Address, PVOID AllocatedBuffer, size_t size, size_t* written) {
