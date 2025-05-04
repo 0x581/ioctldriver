@@ -6,6 +6,7 @@
 #include <ntddk.h>
 
 #include "kdebug.h"
+#include "event.h"
 
 #include "../process/process.h"
 
@@ -257,6 +258,8 @@ NTSTATUS driver_main(PDRIVER_OBJECT driver_object, PUNICODE_STRING registry_path
 
 	if (!NT_SUCCESS(status))
 	{
+		WriteToEventLog(
+			driver_object, 0xC0000001, status, L"Failed to create device object.");
 		debug("[-] Failed to create driver device.\n");
 		return status;
 	}
@@ -269,6 +272,8 @@ NTSTATUS driver_main(PDRIVER_OBJECT driver_object, PUNICODE_STRING registry_path
 	status = IoCreateSymbolicLink(&symbolic_link, &device_name);
 	if (!NT_SUCCESS(status))
 	{
+		WriteToEventLog(
+			driver_object, 0xC0000002, status, L"Failed to create symbolic link.");
 		debug("[-] Failed to establish symbolic link\n");
 		return status;
 	}
@@ -281,6 +286,9 @@ NTSTATUS driver_main(PDRIVER_OBJECT driver_object, PUNICODE_STRING registry_path
 	driver_object->MajorFunction[IRP_MJ_DEVICE_CONTROL] = driver::device_control;
 
 	ClearFlag(device_object->Flags, DO_DEVICE_INITIALIZING);
+
+	WriteToEventLog(
+		driver_object, 0xC0000003, STATUS_SUCCESS, L"Driver initialized successfully.");
 
 	debug("[+] Driver initialized successfully.\n");
 

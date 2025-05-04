@@ -51,6 +51,12 @@
     <ClCompile Include="kdebug\kdebug.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="um_driver\driver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="kdebug\event.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="process\process.h">
@@ -84,6 +90,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="um_driver\driver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tmp\driver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kdebug\event.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

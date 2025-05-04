@@ -100,6 +100,7 @@
     </ClCompile>
     <Link>
       <EntryPointSymbol>DriverEntry</EntryPointSymbol>
+      <AdditionalDependencies>Kernel32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>XCOPY "$(TargetDir)driver.sys" "$(SolutionDir)build\VM Shared\" /Y /I</Command>
@@ -119,6 +120,7 @@
     </ClCompile>
     <Link>
       <EntryPointSymbol>DriverEntry</EntryPointSymbol>
+      <AdditionalDependencies>Kernel32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>XCOPY "$(TargetDir)driver.sys" "$(SolutionDir)build\VM Shared\" /Y /I</Command>
@@ -144,6 +146,7 @@
     <FilesToPackage Include="$(TargetPath)" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="kdebug\event.cpp" />
     <ClCompile Include="kdebug\kdebug.cpp" />
     <ClCompile Include="process\src\get_info.cpp" />
     <ClCompile Include="process\src\get_module.cpp" />
@@ -152,9 +155,11 @@
     <ClCompile Include="process\src\virtual_to_physical.cpp" />
     <ClCompile Include="process\src\get_process.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="um_driver\driver.cpp" />
     <ClCompile Include="windows_internals\ZwQuerySystemInformation.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="kdebug\event.h" />
     <ClInclude Include="kdebug\kdebug.h" />
     <ClInclude Include="process\includes\get_info.h" />
     <ClInclude Include="process\includes\get_module.h" />
@@ -166,6 +171,7 @@
     <ClInclude Include="process\process.h" />
     <ClInclude Include="src\driver.h" />
     <ClInclude Include="um_driver\driver.h" />
+    <ClInclude Include="tmp\driver.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
