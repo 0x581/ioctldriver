@@ -46,35 +46,101 @@ uintptr_t TranslateLinearAddress(uintptr_t pml4, VirtualAddress vAddr) {
 	const uintptr_t pml2_idx = vAddr.get_pml2_index();
 	const uintptr_t pml1_idx = vAddr.get_pml1_index();
 
+	if (DEBUG_LINEAR_TRANSLATION)
+		debug(
+			"[+] Translating Virtual address to physical address:\n"
+			"[+]     Virtual address: 0x%p\n"
+			"[+]     PML4 address:	  0x%p\n"
+			"[+]     PML4 index: %d\n"
+			"[+]     PML3 index: %d\n"
+			"[+]     PML2 index: %d\n"
+			"[+]     PML1 index: %d\n",
+			vAddr.address,
+			pml4,
+			pml4_idx,
+			pml3_idx,
+			pml2_idx,
+			pml1_idx
+		);
+
 	size_t readsize = 0;
 
 	PageMapLevel4Entry pml4e{ };
 	ReadPhysicalAddress(pml4 + PAGE_ENTRY_SIZE * pml4_idx, &pml4e, sizeof(pml4e), &readsize);
 	if (!pml4e.present())
+	{
+		if (DEBUG_LINEAR_TRANSLATION)
+			debug("[-]   PML4 entry is not present.\n");
 		return 0;
+	}
+
+	if (DEBUG_LINEAR_TRANSLATION)
+		debug("[+]   PML3 address: 0x%p\n", pml4e.get_address());
+
 
 	PageMapLevel3Entry pml3e{ };
 	ReadPhysicalAddress(pml4e.get_address() + PAGE_ENTRY_SIZE * pml3_idx, &pml3e, sizeof(pml3e), &readsize);
 	if (!pml3e.present())
+	{
+		if (DEBUG_LINEAR_TRANSLATION)
+			debug("[-]   PML3 entry is not present.\n");
 		return 0;
+	}
+
 
 	/* 1GB huge page */
 	if (pml3e.is_huge())
+	{
+		if (DEBUG_LINEAR_TRANSLATION)
+			debug(
+				"[+]   PML3 entry is a huge page.\n"
+				"[+]   PML2 address: 0x%p\n",
+				pml3e.get_huge_address()
+			);
+
 		return pml3e.get_huge_address() | vAddr.get_offset_1g();
+	}
+
+	if (DEBUG_LINEAR_TRANSLATION)
+		debug("[+]   PML2 address: 0%px\n", pml3e.get_address());
 
 	PageMapLevel2Entry pml2e{ };
 	ReadPhysicalAddress(pml3e.get_address() + PAGE_ENTRY_SIZE * pml2_idx, &pml2e, sizeof(pml2e), &readsize);
 	if (!pml2e.present())
+	{
+		if (DEBUG_LINEAR_TRANSLATION)
+			debug("[-]   PML2 entry is not present.\n");
 		return 0;
+	}
 
 	/* 2MB large page */
 	if (pml2e.is_large())
+	{
+		if (DEBUG_LINEAR_TRANSLATION)
+			debug(
+				"[+]   PML2 entry is a large page.\n"
+				"[+]   PML2 address: 0x%p\n",
+				pml2e.get_large_address()
+			);
+
 		return (pml2e.get_large_address() << 21) + vAddr.get_offset_2m();
+	}
+
+
+	if (DEBUG_LINEAR_TRANSLATION)
+		debug("[+]   PML1 address: 0x%p\n", pml2e.get_address());
 
 	PageMapLevel1Entry pml1e{ };
 	ReadPhysicalAddress(pml2e.get_address() + PAGE_ENTRY_SIZE * pml1_idx, &pml1e, sizeof(pml1e), &readsize);
 	if (!pml1e.present())
+	{
+		if (DEBUG_LINEAR_TRANSLATION)
+			debug("[-]   PML1 entry is not present.\n");
 		return 0;
+	}
+
+	if (DEBUG_LINEAR_TRANSLATION)
+		debug("[+]   Page address: 0x%p\n", pml1e.get_address());
 
 	return pml1e.get_address() + vAddr.get_offset();
 }

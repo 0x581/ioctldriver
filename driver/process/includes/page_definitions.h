@@ -9,9 +9,9 @@ constexpr uint64_t PAGE_MAP_ENTRIES = PAGE_SIZE / PAGE_ENTRY_SIZE;
 
 constexpr uint64_t PMI_BITS = 9; // Page Map Index bits (log2(PAGE_MAP_ENTRIES))
 
-constexpr uint64_t PAGE_MASK_4K = ~((1ULL << (PAGE_SHIFT)) - 1);
-constexpr uint64_t PAGE_MASK_2M = ~((1ULL << (PAGE_SHIFT + PMI_BITS)) - 1);
-constexpr uint64_t PAGE_MASK_1G = ~((1ULL << (PAGE_SHIFT + PMI_BITS + PMI_BITS)) - 1);
+constexpr uint64_t PAGE_MASK_4K = (~0ULL >> 12) & ~((1ULL << (PAGE_SHIFT)) - 1);
+constexpr uint64_t PAGE_MASK_2M = (~0ULL >> 12) & ~((1ULL << (PAGE_SHIFT + PMI_BITS)) - 1);
+constexpr uint64_t PAGE_MASK_1G = (~0ULL >> 12) & ~((1ULL << (PAGE_SHIFT + PMI_BITS + PMI_BITS)) - 1);
 
 
 // PML4
@@ -205,7 +205,7 @@ static_assert(sizeof(PageMapLevel1Entry) == 8);
 // Virtual Address Structure
 
 union VirtualAddress {
-	uint64_t full_address; // The complete 64-bit address
+	uint64_t address; // The complete 64-bit address
 
 private:
 	struct Fields {
@@ -229,7 +229,7 @@ private:
 
 public:
 	// Constructor for easy initialization
-	VirtualAddress(uint64_t addr = 0) : full_address(addr) {}
+	VirtualAddress(uint64_t addr = 0) : address(addr) {}
 
 	uint64_t get_pml4_index() const {
 		return fields.pml4_i;
