@@ -1,9 +1,8 @@
 #pragma once
 
-#include <ntifs.h>
+#include "../includes/virtual_to_physical.h"
 
 #include "../includes/page_definitions.h"
-#include "../includes/get_info.h"
 
 #include "kdebug.h"
 
@@ -93,8 +92,8 @@ NTSTATUS WriteVirtual(uintptr_t dirbase, uintptr_t address, PVOID buffer, size_t
 }
 
 //
-NTSTATUS ReadProcessMemory(PEPROCESS pProcess, PVOID Address, PVOID AllocatedBuffer, size_t size, size_t* read) {
-	uintptr_t process_dirbase = processGetCr3(pProcess);
+NTSTATUS ReadProcessMemory(Process& process, PVOID Address, PVOID AllocatedBuffer, size_t size, size_t* read) {
+	uintptr_t process_cr3 = process.cr3;
 
 	NTSTATUS status = STATUS_UNSUCCESSFUL;
 
@@ -103,7 +102,7 @@ NTSTATUS ReadProcessMemory(PEPROCESS pProcess, PVOID Address, PVOID AllocatedBuf
 
 	while (remaining_size)
 	{
-		uintptr_t CurPhysAddr = TranslateLinearAddress(process_dirbase, (uintptr_t)Address + bytes_read);
+		uintptr_t CurPhysAddr = TranslateLinearAddress(process_cr3, (uintptr_t)Address + bytes_read);
 
 		if (!CurPhysAddr)
 			return STATUS_UNSUCCESSFUL;
@@ -127,8 +126,8 @@ NTSTATUS ReadProcessMemory(PEPROCESS pProcess, PVOID Address, PVOID AllocatedBuf
 	return status;
 }
 
-NTSTATUS WriteProcessMemory(PEPROCESS process, PVOID Address, PVOID AllocatedBuffer, size_t size, size_t* written) {
-	uintptr_t process_dirbase = processGetCr3(process);
+NTSTATUS WriteProcessMemory(Process& process, PVOID Address, PVOID AllocatedBuffer, size_t size, size_t* written) {
+	uintptr_t process_cr3 = process.cr3;
 
 	NTSTATUS status = STATUS_UNSUCCESSFUL;
 
@@ -136,7 +135,7 @@ NTSTATUS WriteProcessMemory(PEPROCESS process, PVOID Address, PVOID AllocatedBuf
 	size_t remaining_size = size;
 	while (remaining_size)
 	{
-		uintptr_t CurPhysAddr = TranslateLinearAddress(process_dirbase, (ULONG64)Address + bytes_written);
+		uintptr_t CurPhysAddr = TranslateLinearAddress(process_cr3, (ULONG64)Address + bytes_written);
 
 		if (!CurPhysAddr)
 			return STATUS_UNSUCCESSFUL;

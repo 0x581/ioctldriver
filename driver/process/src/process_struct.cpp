@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../process.h"
+#include "../includes/process_struct.h"
 
 #include "../includes/get_info.h"
 
