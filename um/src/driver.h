@@ -14,7 +14,16 @@ namespace driver {
 		Request r;
 		r.process_id = reinterpret_cast<HANDLE>(pid);
 
-		return DeviceIoControl(driver_handle, codes::attach, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
+		return DeviceIoControl(driver_handle, codes::attach_pid, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
+	}
+
+	bool attach_to_process(HANDLE driver_handle, const PCWCHAR process_name) {
+		Request r;
+		r.buffer = (PVOID)process_name;
+
+		DeviceIoControl(driver_handle, codes::attach_name, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
+
+		return r.return_value;
 	}
 
 	bool unattach_from_process(HANDLE driver_handle) {

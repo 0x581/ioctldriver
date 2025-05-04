@@ -1,10 +1,13 @@
 #pragma once
 
-#include "debug.h"
 #include "driver.h"
 
 #include <ntifs.h>
 #include <ntddk.h>
+
+#include "../kdebug/kdebug.h"
+
+#include "../process/process.h"
 
 extern "C" {
 	NTKERNELAPI NTSTATUS IoCreateDriver(PUNICODE_STRING DriverName,
@@ -111,6 +114,27 @@ namespace driver {
 		}
 
 		return status;
+	}
+
+	NTSTATUS attach(OpenProcess& process_struct, const PWCHAR process_name) {
+		if (process_struct.Connected())
+			unattach(process_struct);
+
+		if (DEBUG_ATTACH)
+			debug("[+] Attaching to process (%ws).\n", process_name);
+
+		HANDLE pid = 0;
+
+		NTSTATUS status = findProcessIdByName(process_name, pid);
+
+		if (!NT_SUCCESS(status))
+		{
+			if (DEBUG_ATTACH)
+				debug("[-] Failed to find process (%ws).\n", process_name);
+		return status;
+	}
+
+		return attach(process_struct, pid);
 	}
 
 	NTSTATUS process_is_alive(OpenProcess& process_struct, SIZE_T& is_alive) {
@@ -225,8 +249,11 @@ namespace driver {
 		case codes::nothing:
 			status = STATUS_SUCCESS;
 			break;
-		case codes::attach:
+		case codes::attach_pid:
 			status = attach(target_process, request->process_id);
+			break;
+		case codes::attach_name:
+			status = attach(target_process, (PWCHAR)request->buffer);
 			break;
 		case codes::unattach:
 			status = unattach(target_process);
