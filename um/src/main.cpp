@@ -92,7 +92,11 @@ int main() {
 
 	const auto old_debug_level = driver::set_debug_flags(driver, DEFAULT_FLAGS);
 
-	const auto success = driver::attach_to_process(driver, L"Notepad.exe");
+	bool success;
+	bool unattach_success;
+
+
+	success = driver::attach_to_process(driver, L"Notepad.exe");
 
 	if (success)
 	{
@@ -104,12 +108,14 @@ int main() {
 	else
 		std::cout << "Failed to attach to process.\n";
 
-	const auto unattach_success = driver::unattach_from_process(driver);
+	unattach_success = driver::unattach_from_process(driver);
 
 	if (unattach_success)
 		std::cout << "Unattached from process.\n";
 	else
 		std::cout << "Failed to unattach from process.\n";
+
+exit:
 
 	CloseHandle(driver);
 	std::cin.get();

@@ -30,16 +30,10 @@ uintptr_t processGetCr3(PEPROCESS pProcess) {
 
 	uintptr_t kernel_dirbase = *(uintptr_t*)(process + KernelDirectoryTableBaseOffset) & CR3_MASK;
 
-	if (DEBUG_PROCESS_STRUCT)
-		debug("[+] Getting process kernel CR3: 0x%p\n", kernel_dirbase);
-
 	if (kernel_dirbase != 0)
 		return kernel_dirbase;
 
 	uintptr_t user_dirbase = *(uintptr_t*)(process + processGetUserDirectoryTableBaseOffset()) & CR3_MASK;
-
-	if (DEBUG_PROCESS_STRUCT)
-		debug("[~] Getting process user CR3: 0x%p\n", user_dirbase);
 
 	return user_dirbase;
 

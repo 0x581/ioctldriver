@@ -26,3 +26,5 @@ void debug(PCSTR format, ...) {
 	va_end(args);
 #endif // DEBUG
 }
+
+DebugFlags DEBUG_FLAGS = DEFAULT_FLAGS;

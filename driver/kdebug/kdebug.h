@@ -44,13 +44,13 @@ constexpr DebugFlags DEFAULT_FLAGS = {
 						.read = 0,
 					   .write = 0,
 		  .linear_translation = 0,
-				 .get_process = 1,
-				  .get_module = 1,
+				 .get_process = 0,
+				  .get_module = 0,
 			 .set_debug_level = 1,
 	}
 };
 
-static volatile DebugFlags DEBUG_FLAGS = DEFAULT_FLAGS;
+extern DebugFlags DEBUG_FLAGS;
 
 #define DEBUG_DEV_CTRL				(DEBUG_FLAGS.flags.device_control)
 #define DEBUG_ATTACH				(DEBUG_FLAGS.flags.attach)
