@@ -42,11 +42,12 @@ namespace driver {
 	}
 
 	struct Request {
-		void* process_id;
+		void* pid;
 
-		void* target_address;
+		void* address;
 		void* buffer;
 
+		size_t value;
 		size_t return_value;
 
 		size_t size;

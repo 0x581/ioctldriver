@@ -36,13 +36,13 @@ namespace driver {
 		return irp->IoStatus.Status;
 	}
 
-	NTSTATUS set_debug_flags(const size_t new_flags, size_t& old_flags) {
-		old_flags = DEBUG_FLAGS;
+	NTSTATUS set_debug_flags(Request* request) {
+		request->return_value = DEBUG_FLAGS;
 
-		DEBUG_FLAGS = new_flags;
+		DEBUG_FLAGS = request->value;
 
 		if (DEBUG_SET_DEBUG_FLAGS)
-			debug("[+] Debug flags updated from %p to %p.\n", old_flags, DEBUG_FLAGS);
+			debug("[+] Debug flags updated from %p to %p.\n", request->return_value, DEBUG_FLAGS);
 
 		return STATUS_SUCCESS;
 	}
@@ -66,24 +66,24 @@ namespace driver {
 		return STATUS_SUCCESS;
 	}
 
-	NTSTATUS attach(Process& process, HANDLE pid) {
+	NTSTATUS attach_pid(Process& process, Request* request) {
 		if (process.Connected())
 			unattach(process);
 
 		if (DEBUG_ATTACH)
-			debug("[+] Attaching to process (%d).\n", pid);
+			debug("[+] Attaching to process (%d).\n", request->pid);
 
 		PEPROCESS target_process = nullptr;
+		NTSTATUS status = PsLookupProcessByProcessId(request->pid, &target_process);
 
-		NTSTATUS status = PsLookupProcessByProcessId(pid, &target_process);
 		process.Connect(target_process);
 
 		if (DEBUG_ATTACH)
 		{
 			if (NT_SUCCESS(status))
-				debug("[+] Attached to process (%d).\n", pid);
+				debug("[+] Attached to process (%d).\n", request->pid);
 			else
-				debug("[-] Failed to attach to process (%d).\n", pid);
+				debug("[-] Failed to attach to process (%d).\n", request->pid);
 		}
 
 		return status;
@@ -115,7 +115,7 @@ namespace driver {
 		return status;
 	}
 
-	NTSTATUS process_is_alive(Process& process, SIZE_T& is_alive) {
+	NTSTATUS process_is_alive(Process& process, Request* request) {
 		if (DEBUG_TARGET_ALIVE)
 			debug("[+] Checking if target process is alive.\n");
 
@@ -124,24 +124,29 @@ namespace driver {
 			if (DEBUG_TARGET_ALIVE)
 				debug("[-] Not attached to a process.\n");
 
-			is_alive = FALSE;
+			request->return_value = false;
 
 			return STATUS_INVALID_PARAMETER;
 		}
 
-		is_alive = process.is_alive();
+		request->return_value = process.is_alive();
 
 		if (DEBUG_TARGET_ALIVE)
-			debug("[+] Target process is %s.\n", is_alive ? "alive" : "dead");
+			debug("[+] Target process is %s.\n", request->return_value ? "alive" : "dead");
 
 		return STATUS_SUCCESS;
 	}
 
-	NTSTATUS read_memory(Process& process_struct, PVOID destination, PVOID source, SIZE_T size, PSIZE_T return_size) {
+	NTSTATUS read_memory(Process& process, Request* request) {
+		PVOID destination = request->buffer;
+		PVOID source = request->address;
+		SIZE_T size = request->size;
+		PSIZE_T return_size = &request->return_size;
+
 		if (DEBUG_READ)
 			debug("[+] Reading %d bytes from %p to %p.\n", size, source, destination);
 
-		if (!process_struct.Connected())
+		if (!process.Connected())
 		{
 			if (DEBUG_READ)
 				debug("[-] Not attached to a procss.\n");
@@ -149,7 +154,7 @@ namespace driver {
 			return STATUS_INVALID_PARAMETER;
 		}
 
-		const auto status = MmCopyVirtualMemory(process_struct.eprocess, source, PsGetCurrentProcess(),
+		const auto status = MmCopyVirtualMemory(process.eprocess, source, PsGetCurrentProcess(),
 			destination, size, KernelMode, return_size);
 
 		if (DEBUG_READ) if (!NT_SUCCESS(status))
@@ -158,11 +163,16 @@ namespace driver {
 		return status;
 	}
 
-	NTSTATUS write_memory(Process& process_struct, PVOID destination, PVOID source, SIZE_T size, PSIZE_T return_size) {
+	NTSTATUS write_memory(Process& process, Request* request) {
+		PVOID destination = request->address;
+		PVOID source = request->buffer;
+		SIZE_T size = request->size;
+		PSIZE_T return_size = &request->return_size;
+
 		if (DEBUG_WRITE)
 			debug("[+] Writing %d bytes from %p to %p.\n", size, source, destination);
 
-		if (!process_struct.Connected())
+		if (!process.Connected())
 		{
 			if (DEBUG_READ)
 				debug("[-] Not attached to a procss.\n");
@@ -170,7 +180,7 @@ namespace driver {
 			return STATUS_INVALID_PARAMETER;
 		}
 
-		const auto status = MmCopyVirtualMemory(PsGetCurrentProcess(), source, process_struct.eprocess,
+		const auto status = MmCopyVirtualMemory(PsGetCurrentProcess(), source, process.eprocess,
 			destination, size, KernelMode, return_size);
 
 		if (DEBUG_WRITE) if (!NT_SUCCESS(status))
@@ -179,7 +189,10 @@ namespace driver {
 		return status;
 	}
 
-	NTSTATUS get_module(Process& process, PVOID module_name, uintptr_t& address) {
+	NTSTATUS get_module(Process& process, Request* request) {
+		PVOID module_name = request->buffer;
+		uintptr_t& address = request->return_value;;
+
 		return findModuleBaseAddress(process, reinterpret_cast<PWCHAR>(module_name), address);
 	}
 
@@ -215,7 +228,7 @@ namespace driver {
 			status = STATUS_SUCCESS;
 			break;
 		case codes::attach_pid:
-			status = attach(target_process, request->process_id);
+			status = attach_name(target_process, request);
 			break;
 		case codes::attach_name:
 			status = attach_name(target_process, request);
@@ -224,19 +237,19 @@ namespace driver {
 			status = unattach(target_process);
 			break;
 		case codes::target_is_alive:
-			status = process_is_alive(target_process, request->return_value);
+			status = process_is_alive(target_process, request);
 			break;
 		case codes::read:
-			status = read_memory(target_process, request->buffer, request->target_address, request->size, &request->return_size);
+			status = read_memory(target_process, request);
 			break;
 		case codes::write:
-			status = write_memory(target_process, request->target_address, request->buffer, request->size, &request->return_size);
+			status = write_memory(target_process, request);
 			break;
 		case codes::get_module:
-			status = get_module(target_process, request->buffer, request->return_value);
+			status = get_module(target_process, request);
 			break;
 		case codes::set_debug_flags:
-			status = set_debug_flags(*(size_t*)request->buffer, request->return_value);
+			status = set_debug_flags(request);
 			break;
 		default:
 			debug("[-] Unknown control code: %x\n", control_code);
