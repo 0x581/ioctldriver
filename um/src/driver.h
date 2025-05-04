@@ -75,9 +75,9 @@ namespace driver {
 		return r.return_value;
 	}
 
-	size_t set_debug_flags(HANDLE driver_handle, size_t new_flags) {
+	size_t set_debug_flags(HANDLE driver_handle, DebugFlags new_flags) {
 		Request r{ 0 };
-		r.buffer = &new_flags;
+		r.value = new_flags.raw;
 
 		DeviceIoControl(driver_handle, codes::set_debug_flags, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 

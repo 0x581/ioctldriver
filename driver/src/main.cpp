@@ -37,12 +37,12 @@ namespace driver {
 	}
 
 	NTSTATUS set_debug_flags(Request* request) {
-		request->return_value = DEBUG_FLAGS;
+		request->return_value = DEBUG_FLAGS.raw;
 
-		DEBUG_FLAGS = request->value;
+		DEBUG_FLAGS.raw = request->value;
 
 		if (DEBUG_SET_DEBUG_FLAGS)
-			debug("[+] Debug flags updated from %p to %p.\n", request->return_value, DEBUG_FLAGS);
+			debug("[+] Debug flags updated from %p to %p.\n", request->return_value, DEBUG_FLAGS.raw);
 
 		return STATUS_SUCCESS;
 	}
@@ -200,6 +200,9 @@ namespace driver {
 		NTSTATUS status = STATUS_UNSUCCESSFUL;
 
 		const auto control_code = stack_irp->Parameters.DeviceIoControl.IoControlCode;
+
+		if (DEBUG_DEV_CTRL)
+			debug("[+]     Control code: %u\n", control_code);
 
 		switch (control_code)
 		{

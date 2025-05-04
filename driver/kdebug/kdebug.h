@@ -4,43 +4,68 @@
 #define DEBUG
 #endif
 
-constexpr auto DEBUG_FLAG_DEV_CTRL = 0x1 << 0;
-constexpr auto DEBUG_FLAG_ATTACH = 0x1 << 1;
-constexpr auto DEBUG_FLAG_UNATTACH = 0x1 << 2;
-constexpr auto DEBUG_FLAG_PROCESS_STRUCT = 0x1 << 3;
-constexpr auto DEBUG_FLAG_TARGET_ALIVE = 0x1 << 9;
-constexpr auto DEBUG_FLAG_READ = 0x1 << 10;
-constexpr auto DEBUG_FLAG_WRITE = 0x1 << 11;
-constexpr auto DEBUG_FLAG_LINEAR_TRANSLATION = 0x1 << 12;
-constexpr auto DEBUG_FLAG_GET_MODULE = 0x1 << 20;
-constexpr auto DEBUG_FLAG_SET_DEBUG_LEVEL = 0x1 << 30;
+union DebugFlags {
+	size_t raw;
 
-constexpr size_t DEFAULT_FLAGS = (
-	0x0
-	//| DEBUG_FLAG_DEV_CTRL
-	| DEBUG_FLAG_ATTACH
-	| DEBUG_FLAG_UNATTACH
-	| DEBUG_FLAG_PROCESS_STRUCT
-	//| DEBUG_FLAG_TARGET_ALIVE
-	//| DEBUG_FLAG_READ
-	//| DEBUG_FLAG_WRITE
-	//| DEBUG_FLAG_LINEAR_TRANSLATION
-	| DEBUG_FLAG_GET_MODULE
-	| DEBUG_FLAG_SET_DEBUG_LEVEL
-	);
+	struct {
+		size_t device_control : 1;
+		//
+		// Initialization/cleanup
+		size_t attach : 1;
+		size_t unattach : 1;
+		size_t process_struct : 1;
+		size_t target_alive : 1;
+		//
+		// Virtual memory operations
+		size_t read : 1;
+		size_t write : 1;
+		size_t linear_translation : 1;
+		//
+		// Walking process structures
+		size_t get_process : 1;
+		size_t get_module : 1;
+		//
+		// Debug Flags
+		size_t set_debug_level : 1;
 
-static volatile size_t DEBUG_FLAGS = DEFAULT_FLAGS;
+		// Reserved for future use
+		size_t reserved : 53;
+	} flags;
+};
 
-#define DEBUG_DEV_CTRL				(DEBUG_FLAGS & DEBUG_FLAG_DEV_CTRL)
-#define DEBUG_ATTACH				(DEBUG_FLAGS & DEBUG_FLAG_ATTACH)
-#define DEBUG_PROCESS_STRUCT		(DEBUG_FLAGS & DEBUG_FLAG_PROCESS_STRUCT)
-#define DEBUG_UNATTACH				(DEBUG_FLAGS & DEBUG_FLAG_UNATTACH)
-#define DEBUG_TARGET_ALIVE			(DEBUG_FLAGS & DEBUG_FLAG_TARGET_ALIVE)
-#define DEBUG_READ					(DEBUG_FLAGS & DEBUG_FLAG_READ)
-#define DEBUG_WRITE					(DEBUG_FLAGS & DEBUG_FLAG_WRITE)
-#define DEBUG_LINEAR_TRANSLATION	(DEBUG_FLAGS & DEBUG_FLAG_LINEAR_TRANSLATION)
-#define DEBUG_GET_MODULE			(DEBUG_FLAGS & DEBUG_FLAG_GET_MODULE)
-#define DEBUG_SET_DEBUG_FLAGS		(DEBUG_FLAGS & DEBUG_FLAG_SET_DEBUG_LEVEL)
+
+constexpr DebugFlags DEFAULT_FLAGS = {
+	.flags {
+			  .device_control = 0,
+					  .attach = 1,
+					.unattach = 1,
+			  .process_struct = 1,
+				.target_alive = 0,
+						.read = 0,
+					   .write = 0,
+		  .linear_translation = 0,
+				 .get_process = 1,
+				  .get_module = 1,
+			 .set_debug_level = 1,
+	}
+};
+
+static volatile DebugFlags DEBUG_FLAGS = DEFAULT_FLAGS;
+
+#define DEBUG_DEV_CTRL				(DEBUG_FLAGS.flags.device_control)
+#define DEBUG_ATTACH				(DEBUG_FLAGS.flags.attach)
+#define DEBUG_UNATTACH				(DEBUG_FLAGS.flags.unattach)
+#define DEBUG_PROCESS_STRUCT		(DEBUG_FLAGS.flags.process_struct)
+#define DEBUG_TARGET_ALIVE			(DEBUG_FLAGS.flags.target_alive)
+
+#define DEBUG_READ					(DEBUG_FLAGS.flags.read)
+#define DEBUG_WRITE					(DEBUG_FLAGS.flags.write)
+#define DEBUG_LINEAR_TRANSLATION	(DEBUG_FLAGS.flags.linear_translation)
+
+#define DEBUG_GET_PROCESS			(DEBUG_FLAGS.flags.get_process)
+#define DEBUG_GET_MODULE			(DEBUG_FLAGS.flags.get_module)
+
+#define DEBUG_SET_DEBUG_FLAGS		(DEBUG_FLAGS.flags.set_debug_level)
 
 
 void debug(const char* format, ...);
