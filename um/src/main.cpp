@@ -12,11 +12,11 @@
 typedef std::chrono::high_resolution_clock Time;
 typedef std::chrono::milliseconds ms;
 
-void test_read(const HANDLE driver, const DWORD pid, const size_t iterations) {
+void test_read(const HANDLE driver, const size_t iterations) {
 
 	const auto start_time = Time::now();
 
-	const auto module_addr = get_module_base(pid, L"Notepad.exe");
+	const auto module_addr = driver::get_module(driver, L"Notepad.exe");
 
 	const auto percentage_steps = iterations / 100;
 
@@ -46,11 +46,11 @@ void test_read(const HANDLE driver, const DWORD pid, const size_t iterations) {
 }
 
 
-void test_connection(const HANDLE driver, const DWORD pid, const size_t iterations) {
+void test_connection(const HANDLE driver, const size_t iterations) {
 
 	const auto start_time = Time::now();
 
-	const auto module_addr = get_module_base(pid, L"Notepad.exe");
+	const auto module_addr = driver::get_module(driver, L"Notepad.exe");
 
 	const auto percentage_steps = iterations / 100;
 
@@ -98,9 +98,8 @@ int main() {
 	{
 		std::cout << "Attachment successful.\n";
 
-		const auto module_address = driver::get_module(driver, L"Notepad.exe");
-
-		//test_connection(driver, getPID(L"Notepad.exe"), 20);
+		//test_connection(driver, 100000);
+		test_read(driver, 100000);
 	}
 	else
 		std::cout << "Failed to attach to process.\n";
