@@ -5,7 +5,7 @@
 #include <ntifs.h>
 #include <ntddk.h>
 
-#include "../kdebug/kdebug.h"
+#include "kdebug.h"
 
 #include "../process/process.h"
 
@@ -66,14 +66,17 @@ namespace driver {
 		return STATUS_SUCCESS;
 	}
 
-	NTSTATUS attach(Process& process_struct, HANDLE pid) {
-		if (process_struct.Connected())
-			unattach(process_struct);
+	NTSTATUS attach(Process& process, HANDLE pid) {
+		if (process.Connected())
+			unattach(process);
 
 		if (DEBUG_ATTACH)
 			debug("[+] Attaching to process (%d).\n", pid);
 
-		NTSTATUS status = PsLookupProcessByProcessId(pid, &process_struct.eprocess);
+		PEPROCESS target_process = nullptr;
+
+		NTSTATUS status = PsLookupProcessByProcessId(pid, &target_process);
+		process.Connect(target_process);
 
 		if (DEBUG_ATTACH)
 		{
