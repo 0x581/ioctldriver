@@ -161,6 +161,8 @@
     <ClInclude Include="process\includes\get_process.h" />
     <ClInclude Include="process\includes\offsets.h" />
     <ClInclude Include="process\includes\page_definitions.h" />
+    <ClInclude Include="process\includes\process_struct.h" />
+    <ClInclude Include="process\includes\virtual_to_physical.h" />
     <ClInclude Include="process\process.h" />
     <ClInclude Include="src\driver.h" />
   </ItemGroup>

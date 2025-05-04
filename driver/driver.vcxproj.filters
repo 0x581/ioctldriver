@@ -77,5 +77,11 @@
     <ClInclude Include="kdebug\kdebug.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="process\includes\process_struct.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="process\includes\virtual_to_physical.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
