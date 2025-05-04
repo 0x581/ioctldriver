@@ -24,7 +24,8 @@ void test_read(const HANDLE driver, const size_t iterations) {
 	auto i = 1;
 	for (; i <= iterations; ++i)
 	{
-		driver::read_memory<size_t>(driver, module_addr + 0x10);
+		size_t data = 0;
+		driver::read_memory(driver, module_addr + 0x10, &data, sizeof(data));
 
 		if (iterations > 100)
 			if (i % (percentage_steps * 5) == 0)
@@ -113,8 +114,6 @@ int main() {
 		std::cout << "Unattached from process.\n";
 	else
 		std::cout << "Failed to unattach from process.\n";
-
-exit:
 
 	CloseHandle(driver);
 	std::cin.get();
