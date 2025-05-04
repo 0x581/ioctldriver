@@ -8,42 +8,16 @@
 #include <Windows.h>
 #include <chrono>
 
-int main() {
-	const DWORD pid = getPID(L"Notepad.exe");
+typedef std::chrono::high_resolution_clock Time;
+typedef std::chrono::milliseconds ms;
 
-	if (pid == 0)
-	{
-		std::cout << "Failed to find notepad.\n";
-		std::cin.get();
-		return 1;
-	}
-
-
-	const HANDLE driver = CreateFile(L"\\\\.\\AssPileDriver", GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
-
-	if (driver == INVALID_HANDLE_VALUE)
-	{
-		std::cout << "Failed to create our driver handle.\n";
-		std::cin.get();
-		return 1;
-	}
-
-
-	const auto old_debug_level = driver::set_debug_level(driver, DEFAULT_FLAGS);
-
-	if (driver::attach_to_process(driver, pid))
-		std::cout << "Attachment successful.\n";
-
-	const auto module_addr = get_module_base(pid, L"Notepad.exe");
-
-
-	typedef std::chrono::high_resolution_clock Time;
-	typedef std::chrono::milliseconds ms;
+void run_function(const HANDLE driver, const size_t pid, const size_t iterations) {
 
 	const auto start_time = Time::now();
 
-	constexpr auto iterations = 10000000;
-	constexpr auto percentage_steps = iterations / 100;
+	const auto module_addr = get_module_base(pid, L"Notepad.exe");
+
+	const auto percentage_steps = iterations / 100;
 
 	auto i = 1;
 
@@ -55,13 +29,8 @@ int main() {
 
 	for (; i <= iterations; ++i)
 	{
-		const auto alive = driver::process_is_alive(driver);
-
-		if (!alive)
-		{
-			std::cout << "Target process is no longer alive.\n";
-			break;
-		}
+		//const auto alive = driver::do_nothing(driver);
+		driver::read_memory<size_t>(driver, module_addr + 0x10);
 
 		if (i % (percentage_steps * 5) == 0)
 		{
@@ -78,6 +47,29 @@ int main() {
 
 	std::cout << "Elapsed time: " << elapsed_time.count() << " seconds\n";
 	std::cout << (size_t)(i / elapsed_time.count()) << " ops/s (" << i << "ops / " << elapsed_time.count() << "s)\n";
+
+}
+
+int main() {
+	const HANDLE driver = CreateFile(L"\\\\.\\AssPileDriver", GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+
+	if (driver == INVALID_HANDLE_VALUE)
+	{
+		std::cout << "Failed to create our driver handle.\n";
+		std::cin.get();
+		return 1;
+	}
+
+
+	const auto old_debug_level = driver::set_debug_level(driver, DEFAULT_FLAGS);
+
+	const auto pid = driver::attach_to_process(driver, L"Notepad.exe");
+
+	if (pid)
+	{
+		std::cout << "Attachment successful.\n";
+		run_function(driver, pid, 10000000);
+	}
 
 	const auto unattach_success = driver::unattach_from_process(driver);
 
