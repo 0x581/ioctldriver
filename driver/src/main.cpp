@@ -20,36 +20,6 @@ extern "C" {
 }
 
 namespace driver {
-	struct OpenProcess {
-		PEPROCESS process;
-		HANDLE pid;
-
-		BOOLEAN is_alive;
-
-		OpenProcess() : process(nullptr), pid(nullptr), is_alive(FALSE) {}
-
-		BOOLEAN Connected() const { return process != nullptr; }
-
-		VOID Connect(PEPROCESS target_process) {
-			if (this->Connected())
-				this->Clear();
-
-			this->process = target_process;
-			this->pid = PsGetProcessId(target_process);
-			this->is_alive = TRUE;
-		}
-
-		VOID Clear() {
-			if (this->process)
-			{
-				ObDereferenceObject(process);
-				this->process = nullptr;
-			}
-			this->pid = nullptr;
-			this->is_alive = FALSE;
-		}
-	};
-
 	NTSTATUS create(PDEVICE_OBJECT device_object, PIRP irp) {
 		UNREFERENCED_PARAMETER(device_object);
 
@@ -77,7 +47,7 @@ namespace driver {
 		return STATUS_SUCCESS;
 	}
 
-	NTSTATUS unattach(OpenProcess& process_struct) {
+	NTSTATUS unattach(OpenedProcess& process_struct) {
 		if (DEBUG_UNATTACH)
 			debug("[+] Unattaching from process.\n");
 
@@ -96,7 +66,7 @@ namespace driver {
 		return STATUS_SUCCESS;
 	}
 
-	NTSTATUS attach(OpenProcess& process_struct, HANDLE pid) {
+	NTSTATUS attach(OpenedProcess& process_struct, HANDLE pid) {
 		if (process_struct.Connected())
 			unattach(process_struct);
 
@@ -116,7 +86,7 @@ namespace driver {
 		return status;
 	}
 
-	NTSTATUS attach(OpenProcess& process_struct, const PWCHAR process_name) {
+	NTSTATUS attach(OpenedProcess& process_struct, const PWCHAR process_name) {
 		if (process_struct.Connected())
 			unattach(process_struct);
 
@@ -131,13 +101,13 @@ namespace driver {
 		{
 			if (DEBUG_ATTACH)
 				debug("[-] Failed to find process (%ws).\n", process_name);
-		return status;
-	}
+			return status;
+		}
 
 		return attach(process_struct, pid);
 	}
 
-	NTSTATUS process_is_alive(OpenProcess& process_struct, SIZE_T& is_alive) {
+	NTSTATUS process_is_alive(OpenedProcess& process_struct, SIZE_T& is_alive) {
 		if (DEBUG_TARGET_ALIVE)
 			debug("[+] Checking if target process is alive.\n");
 
@@ -165,7 +135,7 @@ namespace driver {
 		return STATUS_SUCCESS;
 	}
 
-	NTSTATUS read_memory(OpenProcess& process_struct, PVOID destination, PVOID source, SIZE_T size, PSIZE_T return_size) {
+	NTSTATUS read_memory(OpenedProcess& process_struct, PVOID destination, PVOID source, SIZE_T size, PSIZE_T return_size) {
 		if (DEBUG_READ)
 			debug("[+] Reading %d bytes from %p to %p.\n", size, source, destination);
 
@@ -186,7 +156,7 @@ namespace driver {
 		return status;
 	}
 
-	NTSTATUS write_memory(OpenProcess& process_struct, PVOID destination, PVOID source, SIZE_T size, PSIZE_T return_size) {
+	NTSTATUS write_memory(OpenedProcess& process_struct, PVOID destination, PVOID source, SIZE_T size, PSIZE_T return_size) {
 		if (DEBUG_WRITE)
 			debug("[+] Writing %d bytes from %p to %p.\n", size, source, destination);
 
@@ -207,7 +177,7 @@ namespace driver {
 		return status;
 	}
 
-	NTSTATUS get_module(OpenProcess& process_struct, PVOID module_name, uintptr_t& address) {
+	NTSTATUS get_module(OpenedProcess& process_struct, PVOID module_name, uintptr_t& address) {
 		UNREFERENCED_PARAMETER(module_name);
 		UNREFERENCED_PARAMETER(process_struct);
 		UNREFERENCED_PARAMETER(address);
@@ -223,7 +193,7 @@ namespace driver {
 		UNREFERENCED_PARAMETER(device_object);
 
 		// This holds the process across calls to the driver.
-		static OpenProcess target_process{};
+		static OpenedProcess target_process{};
 
 		if (DEBUG_DEV_CTRL)
 			debug("[+] Device control called.\n");
