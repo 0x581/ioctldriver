@@ -94,7 +94,7 @@ NTSTATUS WriteVirtual(uintptr_t dirbase, uintptr_t address, PVOID buffer, size_t
 
 //
 NTSTATUS ReadProcessMemory(PEPROCESS pProcess, PVOID Address, PVOID AllocatedBuffer, size_t size, size_t* read) {
-	uintptr_t process_dirbase = getProcessCr3(pProcess);
+	uintptr_t process_dirbase = processGetCr3(pProcess);
 
 	NTSTATUS status = STATUS_UNSUCCESSFUL;
 
@@ -128,7 +128,7 @@ NTSTATUS ReadProcessMemory(PEPROCESS pProcess, PVOID Address, PVOID AllocatedBuf
 }
 
 NTSTATUS WriteProcessMemory(PEPROCESS process, PVOID Address, PVOID AllocatedBuffer, size_t size, size_t* written) {
-	uintptr_t process_dirbase = getProcessCr3(process);
+	uintptr_t process_dirbase = processGetCr3(process);
 
 	NTSTATUS status = STATUS_UNSUCCESSFUL;
 

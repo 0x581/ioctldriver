@@ -8,16 +8,24 @@
 
 #define CR3_MASK ~(PAGE_SIZE - 1);
 
-HANDLE getProcessId(PEPROCESS pProcess) {
+uintptr_t getKernelDirBase() {
+	uintptr_t process = (uintptr_t)PsGetCurrentProcess();
+
+	uintptr_t cr3 = *(uintptr_t*)(process + KernelDirectoryTableBaseOffset);
+
+	return cr3;
+}
+
+HANDLE processGetPid(PEPROCESS pProcess) {
 	uintptr_t process = (uintptr_t)pProcess;
 
-	HANDLE pid = *(PHANDLE)(process + getProcessIdOffset());
+	HANDLE pid = *(PHANDLE)(process + processGetIdOffset());
 
 	return pid;
 }
 
 //check normal dirbase if 0 then get from UserDirectoryTableBase
-uintptr_t getProcessCr3(PEPROCESS pProcess) {
+uintptr_t processGetCr3(PEPROCESS pProcess) {
 	uintptr_t process = (uintptr_t)pProcess;
 
 	uintptr_t kernel_dirbase = *(uintptr_t*)(process + KernelDirectoryTableBaseOffset) & CR3_MASK;
@@ -28,7 +36,7 @@ uintptr_t getProcessCr3(PEPROCESS pProcess) {
 	if (kernel_dirbase != 0)
 		return kernel_dirbase;
 
-	uintptr_t user_dirbase = *(uintptr_t*)(process + getProcessUserDirectoryTableBaseOffset()) & CR3_MASK;
+	uintptr_t user_dirbase = *(uintptr_t*)(process + processGetUserDirectoryTableBaseOffset()) & CR3_MASK;
 
 	if (DEBUG_PROCESS_STRUCT)
 		debug("[~] Getting process user CR3: 0x%p\n", user_dirbase);
@@ -37,34 +45,28 @@ uintptr_t getProcessCr3(PEPROCESS pProcess) {
 
 }
 
-uintptr_t getKernelDirBase() {
-	uintptr_t process = (uintptr_t)PsGetCurrentProcess();
-
-	uintptr_t cr3 = *(uintptr_t*)(process + KernelDirectoryTableBaseOffset);
-
-	return cr3;
-}
-
-uintptr_t getProcessBaseAddress(PEPROCESS pProcess) {
+uintptr_t processGetBaseAddress(PEPROCESS pProcess) {
 	uintptr_t process = (uintptr_t)pProcess;
 
-	uintptr_t Base = *(uintptr_t*)(process + getProcessSectionBaseAddressOffset());
+	uintptr_t Base = *(uintptr_t*)(process + processGetSectionBaseAddressOffset());
 
 	return Base;
 }
 
-uintptr_t getProcessPebPtr(PEPROCESS pProcess) {
+PPEB processGetPebPtr(PEPROCESS pProcess) {
 	uintptr_t process = (uintptr_t)pProcess;
 
-	uintptr_t pPeb = *(uintptr_t*)(process + getProcessPebPtrOffset());
+	PPEB pPeb = *(PPEB*)(process + processGetPebPtrOffset());
 
 	return pPeb;
 }
 
-PLONG getProcessExitStatusAddress(PEPROCESS pProcess) {
+PLONG processGetExitStatusAddress(PEPROCESS pProcess) {
 	uintptr_t process = (uintptr_t)pProcess;
 
-	PLONG exit_status = (PLONG)(process + getProcessExitStatusOffset());
+	PLONG exit_status = (PLONG)(process + processGetExitStatusOffset());
 
 	return exit_status;
 }
+
+

@@ -16,7 +16,7 @@ private:
 
 	uintptr_t process_section_base_address;
 
-	uintptr_t pPeb;
+	PPEB pPeb;
 public:
 	Process();
 

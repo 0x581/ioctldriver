@@ -2,7 +2,6 @@
 
 #include "../process.h"
 
-#include "../includes/offsets.h"
 #include "../includes/get_info.h"
 
 #include "kdebug.h"
@@ -13,7 +12,8 @@ Process::Process() :
 	pid(nullptr),
 	cr3{ 0 },
 	exit_status{ nullptr },
-	process_section_base_address{ 0 } {}
+	process_section_base_address{ 0 },
+	pPeb{ nullptr } {}
 
 bool Process::Connected() const {
 	return eprocess != nullptr;
@@ -27,13 +27,13 @@ void Process::Connect(PEPROCESS target_process) {
 		debug("[+] Connecting to process.\n");
 
 	this->eprocess = target_process;
-	this->pid = getProcessId(this->eprocess);
+	this->pid = processGetPid(this->eprocess);
 
-	this->cr3 = getProcessCr3(this->eprocess);
-	this->exit_status = getProcessExitStatusAddress(this->eprocess);
+	this->cr3 = processGetCr3(this->eprocess);
+	this->exit_status = processGetExitStatusAddress(this->eprocess);
 
-	this->process_section_base_address = getProcessBaseAddress(this->eprocess);
-	this->pPeb = getProcessPebPtr(this->eprocess);
+	this->process_section_base_address = processGetBaseAddress(this->eprocess);
+	this->pPeb = processGetPebPtr(this->eprocess);
 
 	if (DEBUG_PROCESS_STRUCT)
 		debug(
@@ -41,6 +41,7 @@ void Process::Connect(PEPROCESS target_process) {
 			"[+]    PID: %d\n"
 			"[+]    CR3: 0x%p\n"
 			"[+]    Exit status: 0x%p\n"
+			"[+]    PEB: 0x%p\n"
 			"[+]    Process section base address: 0x%p\n",
 			this->pid,
 			this->cr3,

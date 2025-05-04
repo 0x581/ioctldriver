@@ -37,7 +37,7 @@ ULONG getBuildNumber() {
 	return ver.dwBuildNumber;
 }
 
-uintptr_t getProcessIdOffset() {
+uintptr_t processGetIdOffset() {
 	static uintptr_t offset = 0x0;
 
 	if (offset != 0x0)
@@ -64,7 +64,7 @@ uintptr_t getProcessIdOffset() {
 	return offset;
 }
 
-uintptr_t getProcessUserDirectoryTableBaseOffset() {
+uintptr_t processGetUserDirectoryTableBaseOffset() {
 	static uintptr_t offset = 0x0;
 
 	if (offset != 0x0)
@@ -92,7 +92,7 @@ uintptr_t getProcessUserDirectoryTableBaseOffset() {
 	return offset;
 }
 
-uintptr_t getProcessSectionBaseAddressOffset() {
+uintptr_t processGetSectionBaseAddressOffset() {
 	static uintptr_t offset = 0x0;
 
 	if (offset != 0x0)
@@ -111,7 +111,7 @@ uintptr_t getProcessSectionBaseAddressOffset() {
 	return offset;
 }
 
-uintptr_t getProcessPebPtrOffset() {
+uintptr_t processGetPebPtrOffset() {
 	static uintptr_t offset = 0x0;
 
 	if (offset != 0x0)
@@ -139,7 +139,7 @@ uintptr_t getProcessPebPtrOffset() {
 	return offset;
 }
 
-uintptr_t getProcessExitStatusOffset() {
+uintptr_t processGetExitStatusOffset() {
 	static uintptr_t offset = 0x0;
 
 	if (offset != 0x0)

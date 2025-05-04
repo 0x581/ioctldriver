@@ -2,14 +2,14 @@
 
 #include <ntifs.h>
 
-HANDLE getProcessId(PEPROCESS pProcess);
+HANDLE processGetPid(PEPROCESS pProcess);
 
-uintptr_t getProcessCr3(PEPROCESS pProcess);
+uintptr_t processGetCr3(PEPROCESS pProcess);
 
 uintptr_t getKernelDirBase();
 
-uintptr_t getProcessBaseAddress(PEPROCESS pProcess);
+uintptr_t processGetBaseAddress(PEPROCESS pProcess);
 
-uintptr_t getProcessPebPtr(PEPROCESS pProcess);
+PPEB processGetPebPtr(PEPROCESS pProcess);
 
-PLONG getProcessExitStatusAddress(PEPROCESS pProcess);
+PLONG processGetExitStatusAddress(PEPROCESS pProcess);
