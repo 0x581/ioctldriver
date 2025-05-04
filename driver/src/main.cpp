@@ -47,18 +47,18 @@ namespace driver {
 		return STATUS_SUCCESS;
 	}
 
-	NTSTATUS unattach(OpenedProcess& process_struct) {
+	NTSTATUS unattach(Process& process) {
 		if (DEBUG_UNATTACH)
 			debug("[+] Unattaching from process.\n");
 
-		if (!process_struct.process)
+		if (!process.Connected())
 		{
 			if (DEBUG_UNATTACH)
 				debug("[-] Not attached to a process.\n");
 			return STATUS_INVALID_PARAMETER;
 		}
 
-		process_struct.Clear();
+		process.Clear();
 
 		if (DEBUG_UNATTACH)
 			debug("[+] Unattached from process.\n");
@@ -66,14 +66,14 @@ namespace driver {
 		return STATUS_SUCCESS;
 	}
 
-	NTSTATUS attach(OpenedProcess& process_struct, HANDLE pid) {
+	NTSTATUS attach(Process& process_struct, HANDLE pid) {
 		if (process_struct.Connected())
 			unattach(process_struct);
 
 		if (DEBUG_ATTACH)
 			debug("[+] Attaching to process (%d).\n", pid);
 
-		NTSTATUS status = PsLookupProcessByProcessId(pid, &process_struct.process);
+		NTSTATUS status = PsLookupProcessByProcessId(pid, &process_struct.eprocess);
 
 		if (DEBUG_ATTACH)
 		{
@@ -86,7 +86,7 @@ namespace driver {
 		return status;
 	}
 
-	NTSTATUS attach(OpenedProcess& process_struct, const PWCHAR process_name) {
+	NTSTATUS attach(Process& process_struct, const PWCHAR process_name) {
 		if (process_struct.Connected())
 			unattach(process_struct);
 
@@ -107,7 +107,7 @@ namespace driver {
 		return attach(process_struct, pid);
 	}
 
-	NTSTATUS process_is_alive(OpenedProcess& process_struct, SIZE_T& is_alive) {
+	NTSTATUS process_is_alive(Process& process_struct, SIZE_T& is_alive) {
 		if (DEBUG_TARGET_ALIVE)
 			debug("[+] Checking if target process is alive.\n");
 
@@ -124,7 +124,7 @@ namespace driver {
 		//const auto exit_status = PsGetProcessExitStatus(target_process);
 
 		LARGE_INTEGER timeout_0{ 0 };
-		const auto exit_status = KeWaitForSingleObject(process_struct.process, KWAIT_REASON::Executive,
+		const auto exit_status = KeWaitForSingleObject(process_struct.eprocess, KWAIT_REASON::Executive,
 			KernelMode, FALSE, &timeout_0);
 
 		is_alive = (exit_status == STATUS_TIMEOUT);
@@ -135,7 +135,7 @@ namespace driver {
 		return STATUS_SUCCESS;
 	}
 
-	NTSTATUS read_memory(OpenedProcess& process_struct, PVOID destination, PVOID source, SIZE_T size, PSIZE_T return_size) {
+	NTSTATUS read_memory(Process& process_struct, PVOID destination, PVOID source, SIZE_T size, PSIZE_T return_size) {
 		if (DEBUG_READ)
 			debug("[+] Reading %d bytes from %p to %p.\n", size, source, destination);
 
@@ -147,7 +147,7 @@ namespace driver {
 			return STATUS_INVALID_PARAMETER;
 		}
 
-		const auto status = MmCopyVirtualMemory(process_struct.process, source, PsGetCurrentProcess(),
+		const auto status = MmCopyVirtualMemory(process_struct.eprocess, source, PsGetCurrentProcess(),
 			destination, size, KernelMode, return_size);
 
 		if (DEBUG_READ) if (!NT_SUCCESS(status))
@@ -156,7 +156,7 @@ namespace driver {
 		return status;
 	}
 
-	NTSTATUS write_memory(OpenedProcess& process_struct, PVOID destination, PVOID source, SIZE_T size, PSIZE_T return_size) {
+	NTSTATUS write_memory(Process& process_struct, PVOID destination, PVOID source, SIZE_T size, PSIZE_T return_size) {
 		if (DEBUG_WRITE)
 			debug("[+] Writing %d bytes from %p to %p.\n", size, source, destination);
 
@@ -168,7 +168,7 @@ namespace driver {
 			return STATUS_INVALID_PARAMETER;
 		}
 
-		const auto status = MmCopyVirtualMemory(PsGetCurrentProcess(), source, process_struct.process,
+		const auto status = MmCopyVirtualMemory(PsGetCurrentProcess(), source, process_struct.eprocess,
 			destination, size, KernelMode, return_size);
 
 		if (DEBUG_WRITE) if (!NT_SUCCESS(status))
@@ -177,7 +177,7 @@ namespace driver {
 		return status;
 	}
 
-	NTSTATUS get_module(OpenedProcess& process_struct, PVOID module_name, uintptr_t& address) {
+	NTSTATUS get_module(Process& process_struct, PVOID module_name, uintptr_t& address) {
 		UNREFERENCED_PARAMETER(module_name);
 		UNREFERENCED_PARAMETER(process_struct);
 		UNREFERENCED_PARAMETER(address);
@@ -193,7 +193,7 @@ namespace driver {
 		UNREFERENCED_PARAMETER(device_object);
 
 		// This holds the process across calls to the driver.
-		static OpenedProcess target_process{};
+		static Process target_process{};
 
 		if (DEBUG_DEV_CTRL)
 			debug("[+] Device control called.\n");

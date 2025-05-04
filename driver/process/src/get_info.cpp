@@ -6,7 +6,7 @@
 
 
 //check normal dirbase if 0 then get from UserDirectoryTableBase
-uintptr_t GetProcessCr3(PEPROCESS pProcess) {
+uintptr_t getProcessCr3(PEPROCESS pProcess) {
 	uintptr_t process = (uintptr_t)pProcess;
 
 	uintptr_t process_dirbase = process + DirectoryTableBaseOffset;
@@ -20,7 +20,7 @@ uintptr_t GetProcessCr3(PEPROCESS pProcess) {
 	return process_dirbase;
 }
 
-uintptr_t GetKernelDirBase() {
+uintptr_t getKernelDirBase() {
 	uintptr_t process = (uintptr_t)PsGetCurrentProcess();
 
 	uintptr_t cr3 = *(uintptr_t*)(process + DirectoryTableBaseOffset);
@@ -28,10 +28,18 @@ uintptr_t GetKernelDirBase() {
 	return cr3;
 }
 
-uintptr_t GetProcessBaseAddress(PEPROCESS pProcess) {
+uintptr_t getProcessBaseAddress(PEPROCESS pProcess) {
 	uintptr_t process = (uintptr_t)pProcess;
 
 	uintptr_t Base = *(uintptr_t*)(process + getProcessSectionBaseAddressOffset());
 
 	return Base;
+}
+
+PLONG getProcessExitStatusAddress(PEPROCESS pProcess) {
+	uintptr_t process = (uintptr_t)pProcess;
+
+	PLONG exit_status = (PLONG)(process + getProcessExitStatusOffset());
+
+	return exit_status;
 }

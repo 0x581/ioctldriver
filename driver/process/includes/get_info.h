@@ -2,8 +2,10 @@
 
 #include <ntifs.h>
 
-uintptr_t GetProcessCr3(PEPROCESS pProcess);
+uintptr_t getProcessCr3(PEPROCESS pProcess);
 
-uintptr_t GetKernelDirBase();
+uintptr_t getKernelDirBase();
 
-uintptr_t GetProcessBaseAddress(PEPROCESS pProcess);
+uintptr_t getProcessBaseAddress(PEPROCESS pProcess);
+
+PLONG getProcessExitStatusAddress(PEPROCESS pProcess);

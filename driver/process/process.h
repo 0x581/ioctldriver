@@ -5,9 +5,9 @@
 #include "includes/get_module.h"
 #include "includes/get_process.h"
 
-class OpenedProcess {
+class Process {
 public:
-	PEPROCESS process;
+	PEPROCESS eprocess;
 	HANDLE pid;
 
 	uintptr_t cr3;
@@ -15,9 +15,8 @@ private:
 	PLONG exit_status;
 
 	uintptr_t process_section_base_address;
-	uintptr_t process_directory_table_base;
 public:
-	OpenedProcess();
+	Process();
 
 	bool Connected() const;
 

@@ -42,7 +42,7 @@
     <ClCompile Include="process\src\get_info.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="process\src\opened_process.cpp">
+    <ClCompile Include="process\src\process_struct.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="process\src\offsets.cpp">
