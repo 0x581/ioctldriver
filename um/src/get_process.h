@@ -36,6 +36,7 @@ static DWORD getPID(const wchar_t* processName) {
 	return pid;
 }
 
+
 static uintptr_t get_module_base(const DWORD pid, const wchar_t* module_name) {
 	HANDLE snap_shot = (HANDLE)CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, pid);
 	if (snap_shot == INVALID_HANDLE_VALUE)
