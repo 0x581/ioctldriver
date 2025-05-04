@@ -5,7 +5,7 @@
 #include "../includes/page_definitions.h"
 #include "../includes/get_info.h"
 
-#include "../../kdebug/kdebug.h"
+#include "kdebug.h"
 
 
 NTSTATUS ReadPhysicalAddress(uintptr_t TargetAddress, PVOID lpBuffer, size_t Size, size_t* BytesRead) {

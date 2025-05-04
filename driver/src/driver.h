@@ -37,7 +37,7 @@ namespace driver {
 		constexpr unsigned long get_module =
 			CTL_CODE(FILE_DEVICE_UNKNOWN, 201, METHOD_BUFFERED, FILE_SPECIAL_ACCESS);
 
-		constexpr unsigned long set_debug_level =
+		constexpr unsigned long set_debug_flags =
 			CTL_CODE(FILE_DEVICE_UNKNOWN, 500, METHOD_BUFFERED, FILE_SPECIAL_ACCESS);
 	}
 

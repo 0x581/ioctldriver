@@ -2,7 +2,7 @@
 
 #include "../includes/get_process.h"
 
-#include "../../kdebug/kdebug.h"
+#include "kdebug.h"
 
 #include "../../windows_internals/ZwQuerySystemInformation.cpp"
 

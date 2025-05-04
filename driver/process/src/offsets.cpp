@@ -2,7 +2,7 @@
 
 #include "../includes/offsets.h"
 
-#include "../../kdebug/kdebug.h"
+#include "kdebug.h"
 
 
 //https://ntdiff.github.io/

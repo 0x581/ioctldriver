@@ -84,10 +84,10 @@ namespace driver {
 		return r.return_value;
 	}
 
-	size_t set_debug_level(HANDLE driver_handle, size_t new_flags) {
+	size_t set_debug_flags(HANDLE driver_handle, size_t new_flags) {
 		Request r;
 		r.buffer = &new_flags;
-		DeviceIoControl(driver_handle, codes::set_debug_level, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
+		DeviceIoControl(driver_handle, codes::set_debug_flags, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 		return r.return_value;
 	}
 }

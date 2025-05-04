@@ -5,7 +5,7 @@
 #include "../includes/offsets.h"
 #include "../includes/get_info.h"
 
-#include "../../kdebug/kdebug.h"
+#include "kdebug.h"
 
 
 Process::Process() :
@@ -36,11 +36,11 @@ void Process::Connect(PEPROCESS target_process) {
 
 	if (DEBUG_ATTACH)
 		debug(
-			"[+] Connected.\n"
-			"[+]	PID: %d\n"
-			"[+]	CR3: %p\n"
-			"[+]	Exit status: %p\n"
-			"[+]	Process section base address: %p\n",
+			"[+] Connected:\n"
+			"[+]    PID: %d\n"
+			"[+]    CR3: %p\n"
+			"[+]    Exit status: %p\n"
+			"[+]    Process section base address: %p\n",
 			this->pid,
 			this->cr3,
 			this->exit_status,
@@ -72,9 +72,21 @@ bool Process::is_alive() const {
 
 	const auto real_status = PsGetProcessExitStatus(this->eprocess);
 
+	LARGE_INTEGER timeout_0{ 0 };
+	const auto ke_status = KeWaitForSingleObject(this->eprocess, KWAIT_REASON::Executive,
+		KernelMode, FALSE, &timeout_0);
+
+	const auto is_alive = (ke_status == STATUS_TIMEOUT);
+
+
 	if (real_status != status)
 	{
-		debug("[!] Fetched wrong status code in is_alive()!");
+		debug("[!] Fetched wrong status code vs PsGetProcessExitStatus in is_alive()!");
+	}
+
+	if (is_alive != (status == STATUS_PENDING))
+	{
+		debug("[!] Fetched wrong status code vs KeWaitForSingleObject in is_alive()!");
 	}
 
 	return status == STATUS_PENDING;

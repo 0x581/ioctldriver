@@ -36,9 +36,9 @@ namespace driver {
 		return irp->IoStatus.Status;
 	}
 
-	NTSTATUS set_debug_level(const size_t new_flags, size_t& old_flags) {
-		if (DEBUG_SET_DEBUG_LEVEL)
-			debug("[+] Setting debug level from %p to %p.\n", DEBUG_FLAGS, new_flags);
+	NTSTATUS set_debug_flags(const size_t new_flags, size_t& old_flags) {
+		if (DEBUG_SET_DEBUG_FLAGS)
+			debug("[+] Setting debug flags from %p to %p.\n", DEBUG_FLAGS, new_flags);
 
 		old_flags = DEBUG_FLAGS;
 
@@ -240,8 +240,8 @@ namespace driver {
 		case codes::get_module:
 			status = get_module(target_process, request->buffer, request->return_value);
 			break;
-		case codes::set_debug_level:
-			status = set_debug_level(*(size_t*)request->buffer, request->return_value);
+		case codes::set_debug_flags:
+			status = set_debug_flags(*(size_t*)request->buffer, request->return_value);
 			break;
 		default:
 			debug("[-] Unknown control code: %x\n", control_code);
