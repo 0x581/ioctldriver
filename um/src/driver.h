@@ -74,9 +74,9 @@ namespace driver {
 	uintptr_t get_module(HANDLE driver_handle, const wchar_t* module_name) {
 		Request r{ 0 };
 		r.buffer = (PVOID)module_name;
-		r.size = wcsnlen(module_name, MAX_PATH + 4);
+		r.size = wcsnlen(module_name, MAX_PATH);
 
-		if (r.size >= MAX_PATH + 4)
+		if (r.size >= MAX_PATH)
 			return 0;
 
 		DeviceIoControl(driver_handle, codes::get_module, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
