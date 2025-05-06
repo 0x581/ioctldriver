@@ -2,13 +2,15 @@
 
 #include "kdebug.h"
 
-#ifdef DEBUG
+#ifdef _DEBUG
 #include <ntifs.h>
 #include <ntstrsafe.h>
+#else
+#include <ntdef.h>
 #endif
 
 void debug(PCSTR format, ...) {
-#ifndef DEBUG
+#ifndef _DEBUG
 	UNREFERENCED_PARAMETER(format);
 #else
 	va_list args;
