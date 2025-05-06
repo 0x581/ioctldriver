@@ -1,12 +1,13 @@
 #pragma once
 
-#include "driver.h"
-
 #include <ntifs.h>
 #include <ntddk.h>
 
 #include "kdebug.h"
 #include "event.h"
+
+#include "ioctl_codes.h"
+#include "requests.h"
 
 #include "../process/process.h"
 
@@ -207,29 +208,57 @@ namespace driver {
 
 		switch (control_code)
 		{
-		case codes::nothing:
+			//
+			// Driver state
+		case ioctl_codes::verify_connection:
 			status = STATUS_SUCCESS;
 			break;
-			break;
-		case codes::attach:
+		case ioctl_codes::attach:
 			status = attach(target_process, request);
 			break;
-		case codes::unattach:
+		case ioctl_codes::unattach:
 			status = unattach(target_process);
 			break;
-		case codes::target_is_alive:
+			//
+			// Target state
+		case ioctl_codes::is_target_alive:
 			status = process_is_alive(target_process, request);
 			break;
-		case codes::read:
+			//
+			// IO
+		case ioctl_codes::read_memory:
 			status = read_memory(target_process, request);
 			break;
-		case codes::write:
+		case ioctl_codes::write_memory:
 			status = write_memory(target_process, request);
 			break;
-		case codes::get_module:
+			//
+			// Memory
+		case ioctl_codes::allocate_memory:
+		case ioctl_codes::free_memory:
+		case ioctl_codes::protect_memory:
+		case ioctl_codes::query_memory:
+		case ioctl_codes::scan_memory:
+			debug("[-] Memory operations not implemented.\n");
+			status = STATUS_NOT_IMPLEMENTED;
+			break;
+			//
+			// Threads
+		case ioctl_codes::create_thread:
+		case ioctl_codes::remove_thread:
+			debug("[-] Thread operations not implemented.\n");
+			status = STATUS_NOT_IMPLEMENTED;
+			break;
+			//
+			// Modules
+		case ioctl_codes::get_module_base:
 			status = get_module(target_process, request);
 			break;
-		case codes::set_debug_flags:
+		case ioctl_codes::enumerate_modules:
+			debug("[-] Module enumeration not implemented.\n");
+			status = STATUS_NOT_IMPLEMENTED;
+			break;
+		case ioctl_codes::set_debug_flags:
 			status = set_debug_flags(request);
 			break;
 		default:
@@ -275,6 +304,9 @@ NTSTATUS driver_main(PDRIVER_OBJECT driver_object, PUNICODE_STRING registry_path
 		WriteToEventLog(
 			driver_object, 0xC0000002, status, L"Failed to create symbolic link.");
 		debug("[-] Failed to establish symbolic link\n");
+
+		IoDeleteDevice(device_object);
+
 		return status;
 	}
 
