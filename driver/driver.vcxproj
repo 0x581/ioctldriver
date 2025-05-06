@@ -96,7 +96,7 @@
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)kdebug\;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)includes\;$(ProjectDir)kdebug\;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EntryPointSymbol>DriverEntry</EntryPointSymbol>
@@ -116,7 +116,7 @@
     <ClCompile>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>$(ProjectDir)kdebug\;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)includes\;$(ProjectDir)kdebug\;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EntryPointSymbol>DriverEntry</EntryPointSymbol>
@@ -155,10 +155,12 @@
     <ClCompile Include="process\src\virtual_to_physical.cpp" />
     <ClCompile Include="process\src\get_process.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="um_driver\driver.cpp" />
-    <ClCompile Include="windows_internals\ZwQuerySystemInformation.cpp" />
+    <ClCompile Include="driver_api\driver_dll.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="includes\ioctl_codes.h" />
+    <ClInclude Include="includes\requests.h" />
+    <ClInclude Include="kdebug\debug_flags.h" />
     <ClInclude Include="kdebug\event.h" />
     <ClInclude Include="kdebug\kdebug.h" />
     <ClInclude Include="process\includes\get_info.h" />
@@ -169,9 +171,7 @@
     <ClInclude Include="process\includes\process_struct.h" />
     <ClInclude Include="process\includes\virtual_to_physical.h" />
     <ClInclude Include="process\process.h" />
-    <ClInclude Include="src\driver.h" />
-    <ClInclude Include="um_driver\driver.h" />
-    <ClInclude Include="tmp\driver.h" />
+    <ClInclude Include="driver_api\driver_api.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

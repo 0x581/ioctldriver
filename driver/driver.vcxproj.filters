@@ -30,9 +30,6 @@
     <ClCompile Include="process\src\get_process.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="windows_internals\ZwQuerySystemInformation.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="process\src\get_module.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -51,7 +48,7 @@
     <ClCompile Include="kdebug\kdebug.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="um_driver\driver.cpp">
+    <ClCompile Include="driver_api\driver_dll.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="kdebug\event.cpp">
@@ -60,9 +57,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="process\process.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\driver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="process\includes\get_info.h">
@@ -89,13 +83,19 @@
     <ClInclude Include="process\includes\virtual_to_physical.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="um_driver\driver.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="tmp\driver.h">
+    <ClInclude Include="driver_api\driver_api.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="kdebug\event.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="kdebug\debug_flags.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\ioctl_codes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\requests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
