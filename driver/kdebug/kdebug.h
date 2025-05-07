@@ -6,7 +6,7 @@ extern DebugFlags DEBUG_FLAGS;
 
 #define DEBUG_DEV_CTRL				(DEBUG_FLAGS.flags.device_control)
 #define DEBUG_ATTACH				(DEBUG_FLAGS.flags.attach)
-#define DEBUG_UNATTACH				(DEBUG_FLAGS.flags.unattach)
+#define DEBUG_DETACH				(DEBUG_FLAGS.flags.detach)
 #define DEBUG_PROCESS_STRUCT		(DEBUG_FLAGS.flags.process_struct)
 #define DEBUG_TARGET_ALIVE			(DEBUG_FLAGS.flags.target_alive)
 

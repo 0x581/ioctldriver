@@ -8,7 +8,7 @@ union DebugFlags {
 		//
 		// Initialization/cleanup
 		size_t attach : 1;
-		size_t unattach : 1;
+		size_t detach : 1;
 		size_t process_struct : 1;
 		size_t target_alive : 1;
 		//
@@ -33,7 +33,7 @@ constexpr DebugFlags DEFAULT_FLAGS = {
 	.flags {
 			  .device_control = 0,
 					  .attach = 1,
-					.unattach = 1,
+					.detach = 1,
 			  .process_struct = 1,
 				.target_alive = 1,
 						.read = 0,

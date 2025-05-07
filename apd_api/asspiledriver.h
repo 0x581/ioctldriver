@@ -13,7 +13,7 @@ namespace apd {
 
 	bool attach_to_process(HANDLE driver_handle, const wchar_t* process_name);
 
-	bool unattach_from_process(HANDLE driver_handle);
+	bool detach_from_process(HANDLE driver_handle);
 
 	bool is_process_alive(HANDLE driver_handle);
 

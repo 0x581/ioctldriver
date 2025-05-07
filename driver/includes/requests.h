@@ -11,7 +11,7 @@ struct RequestAttach {
 	HANDLE pid;
 };
 
-typedef Request RequestUnattach;
+typedef Request RequestDetach;
 
 struct RequestIsProcessAlive {
 	bool is_alive;

@@ -58,7 +58,7 @@ void Process::Connect(PEPROCESS target_process) {
 }
 
 void Process::Clear() {
-	if (DEBUG_UNATTACH)
+	if (DEBUG_DETACH)
 		debug("[+] Clearing process data.\n");
 
 	if (this->eprocess)

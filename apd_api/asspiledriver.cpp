@@ -41,8 +41,8 @@ namespace apd {
 		return DeviceIoControl(driver_handle, ioctl_codes::attach, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 	}
 
-	bool unattach_from_process(HANDLE driver_handle) {
-		RequestUnattach r{};
+	bool detach_from_process(HANDLE driver_handle) {
+		RequestDetach r{};
 		return DeviceIoControl(driver_handle, ioctl_codes::detach, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 	}
 

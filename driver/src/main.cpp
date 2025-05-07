@@ -93,7 +93,7 @@ namespace driver {
 			status = attach(target_process, (RequestAttach*)request);
 			break;
 		case ioctl_codes::detach:
-			CHECK_REQUEST_SIZE(request_data, RequestUnattach, DEBUG_UNATTACH);
+			CHECK_REQUEST_SIZE(request_data, RequestDetach, DEBUG_DETACH);
 			status = detach(target_process);
 			break;
 			//
