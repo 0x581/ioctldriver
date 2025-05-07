@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../process/includes/process_struct.h"
+#include "../process/process.h"
 #include "requests.h"
 
 #include <ntdef.h>

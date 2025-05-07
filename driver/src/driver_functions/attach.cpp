@@ -3,7 +3,7 @@
 #include "driver_functions.h"
 #include <kdebug.h>
 
-#include "../../process/includes/get_process.h"
+#include "../process/includes/get_process.h"
 
 
 NTSTATUS attach(Process& process, RequestAttach* request) {

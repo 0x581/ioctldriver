@@ -149,12 +149,12 @@
   <ItemGroup>
     <ClCompile Include="kdebug\event.cpp" />
     <ClCompile Include="kdebug\kdebug.cpp" />
-    <ClCompile Include="process\src\get_info.cpp" />
-    <ClCompile Include="process\src\get_module.cpp" />
-    <ClCompile Include="process\src\offsets.cpp" />
-    <ClCompile Include="process\src\process_struct.cpp" />
-    <ClCompile Include="process\src\virtual_to_physical.cpp" />
-    <ClCompile Include="process\src\get_process.cpp" />
+    <ClCompile Include="src\process\src\get_info.cpp" />
+    <ClCompile Include="src\process\src\get_module.cpp" />
+    <ClCompile Include="src\process\src\offsets.cpp" />
+    <ClCompile Include="src\process\src\process_struct.cpp" />
+    <ClCompile Include="src\process\src\virtual_to_physical.cpp" />
+    <ClCompile Include="src\process\src\get_process.cpp" />
     <ClCompile Include="src\driver_functions\attach.cpp" />
     <ClCompile Include="src\driver_functions\detach.cpp" />
     <ClCompile Include="src\driver_functions\get_module_base.cpp" />
@@ -171,14 +171,14 @@
     <ClInclude Include="kdebug\debug_flags.h" />
     <ClInclude Include="kdebug\event.h" />
     <ClInclude Include="kdebug\kdebug.h" />
-    <ClInclude Include="process\includes\get_info.h" />
-    <ClInclude Include="process\includes\get_module.h" />
-    <ClInclude Include="process\includes\get_process.h" />
-    <ClInclude Include="process\includes\offsets.h" />
-    <ClInclude Include="process\includes\page_definitions.h" />
-    <ClInclude Include="process\includes\process_struct.h" />
-    <ClInclude Include="process\includes\virtual_to_physical.h" />
-    <ClInclude Include="process\process.h" />
+    <ClInclude Include="src\process\includes\get_info.h" />
+    <ClInclude Include="src\process\includes\get_module.h" />
+    <ClInclude Include="src\process\includes\get_process.h" />
+    <ClInclude Include="src\process\includes\offsets.h" />
+    <ClInclude Include="src\process\includes\page_definitions.h" />
+    <ClInclude Include="src\process\includes\process_struct.h" />
+    <ClInclude Include="src\process\includes\virtual_to_physical.h" />
+    <ClInclude Include="src\process\process.h" />
     <ClInclude Include="src\driver_functions\driver_functions.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

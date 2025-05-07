@@ -10,7 +10,7 @@
 #include "ioctl_codes.h"
 #include "requests.h"
 
-#include "../process/process.h"
+#include "process/process.h"
 
 #include "driver_functions/driver_functions.h"
 
