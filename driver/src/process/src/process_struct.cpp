@@ -53,6 +53,7 @@ void Process::Connect(PEPROCESS target_process) {
 			this->pid,
 			this->cr3,
 			this->exit_status,
+			this->pPeb,
 			this->process_section_base_address
 		);
 }
@@ -70,6 +71,7 @@ void Process::Clear() {
 	this->pid = nullptr;
 	this->cr3 = 0;
 	this->exit_status = nullptr;
+	this->pPeb = nullptr;
 	this->process_section_base_address = 0;
 }
 
