@@ -1,9 +1,8 @@
 #pragma once
 
+typedef void* HANDLE;
 typedef unsigned long long uintptr_t;
 typedef uintptr_t DriverFlags;
-
-#include <Windows.h>
 
 namespace apd {
 	HANDLE open_driver();
@@ -24,5 +23,5 @@ namespace apd {
 
 	size_t read_memory(HANDLE driver_handle, const uintptr_t addr, void* buffer, const size_t size);
 
-	bool write_memory(HANDLE driver_handle, const uintptr_t addr, void* buffer, const size_t size);
+	size_t write_memory(HANDLE driver_handle, const uintptr_t addr, void* buffer, const size_t size);
 }

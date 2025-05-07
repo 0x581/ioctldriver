@@ -6,6 +6,8 @@
 #include "ioctl_codes.h"
 #include "requests.h"
 
+#include "Windows.h"
+
 namespace apd {
 	HANDLE open_driver() {
 		void* driver_handle = CreateFile(
@@ -27,66 +29,72 @@ namespace apd {
 	}
 
 	bool verify_connection(HANDLE driver_handle) {
-		Request r{ 0 };
+		RequestVerifyConnection r{ };
 		return DeviceIoControl(driver_handle, ioctl_codes::verify_connection, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 	}
 
 	bool attach_to_process(HANDLE driver_handle, const wchar_t* process_name) {
-		Request r{ 0 };
-		r.buffer = (PVOID)process_name;
+		RequestAttach r{};
+		r.pid = 0;
+		wcsncpy_s(r.process_name, process_name, MAX_PATH + 1);
 
 		return DeviceIoControl(driver_handle, ioctl_codes::attach, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 	}
 
 	bool unattach_from_process(HANDLE driver_handle) {
-		Request r{ 0 };
+		RequestUnattach r{};
 		return DeviceIoControl(driver_handle, ioctl_codes::unattach, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 	}
 
 	bool is_process_alive(HANDLE driver_handle) {
-		Request r{ 0 };
+		RequestIsProcessAlive r{};
 		const BOOL status = DeviceIoControl(driver_handle, ioctl_codes::is_target_alive, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 
-		return status && r.return_value;
+		return status && r.is_alive;
 	}
 
 	uintptr_t get_module_base(HANDLE driver_handle, const wchar_t* module_name) {
-		Request r{ 0 };
-		r.buffer = (PVOID)module_name;
-		r.size = wcsnlen(module_name, MAX_PATH);
-
-		if (r.size >= MAX_PATH)
+		if (wcsnlen(module_name, MAX_PATH + 1) > MAX_PATH)
 			return 0;
+
+		RequestGetModuleBase r{ };
+		r.module_base = 0;
+		wcsncpy_s(r.module_name, module_name, MAX_PATH + 1);
 
 		DeviceIoControl(driver_handle, ioctl_codes::get_module_base, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 
-		return r.return_value;
+		return r.module_base;
 	}
 
 	DriverFlags set_debug_flags(HANDLE driver_handle, const DriverFlags new_flags) {
-		Request r{ 0 };
-		r.value = new_flags;
+		RequestSetDebugFlags r{ };
+		r.old_flags = 0;
+		r.new_flags = new_flags;
 
 		DeviceIoControl(driver_handle, ioctl_codes::set_debug_flags, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 
-		return r.return_value;
+		return r.old_flags;
 	}
 
 	size_t read_memory(HANDLE driver_handle, const uintptr_t addr, void* buffer, const size_t size) {
-		Request r{ 0 };
-		r.address = reinterpret_cast<void*>(addr);
-		r.buffer = buffer;
+		RequestReadMemory r{ };
+		r.source = reinterpret_cast<void*>(addr);
+		r.destination = buffer;
 		r.size = size;
+
 		DeviceIoControl(driver_handle, ioctl_codes::read_memory, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
+
 		return r.return_size;
 	}
 
-	bool write_memory(HANDLE driver_handle, const uintptr_t addr, void* buffer, const size_t size) {
-		Request r{ 0 };
-		r.address = reinterpret_cast<void*>(addr);
-		r.buffer = buffer;
+	size_t write_memory(HANDLE driver_handle, const uintptr_t addr, void* buffer, const size_t size) {
+		RequestWriteMemory r{ };
+		r.destination = reinterpret_cast<void*>(addr);
+		r.source = buffer;
 		r.size = size;
 
-		return DeviceIoControl(driver_handle, ioctl_codes::write_memory, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
+		DeviceIoControl(driver_handle, ioctl_codes::write_memory, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
+
+		return r.return_size;
 	}
 }

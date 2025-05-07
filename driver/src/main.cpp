@@ -22,6 +22,19 @@ extern "C" {
 		PSIZE_T ReturnSize);
 }
 
+#define CHECK_REQUEST_SIZE(request_data, Request, DEBUG_FLAG) \
+{ \
+	if (request_data.InputBufferLength < sizeof(Request) || request_data.OutputBufferLength < sizeof(Request)) \
+	{ \
+		if (DEBUG_FLAG) { debug("[-] Invalid request size.\n"); } \
+		status = STATUS_INVALID_PARAMETER; \
+		request_size = 0; \
+		break; \
+	} \
+	else { request_size = sizeof(Request); } \
+}
+
+
 namespace driver {
 	NTSTATUS create(PDEVICE_OBJECT device_object, PIRP irp) {
 		UNREFERENCED_PARAMETER(device_object);
@@ -39,13 +52,13 @@ namespace driver {
 		return irp->IoStatus.Status;
 	}
 
-	NTSTATUS set_debug_flags(Request* request) {
-		request->return_value = DEBUG_FLAGS.raw;
+	NTSTATUS set_debug_flags(RequestSetDebugFlags* request) {
+		request->old_flags = DEBUG_FLAGS.raw;
 
-		DEBUG_FLAGS.raw = request->value;
+		DEBUG_FLAGS.raw = request->new_flags;
 
 		if (DEBUG_SET_DEBUG_FLAGS)
-			debug("[+] Debug flags updated from %p to %p.\n", request->return_value, DEBUG_FLAGS.raw);
+			debug("[+] Debug flags updated from %p to %p.\n", request->old_flags, DEBUG_FLAGS.raw);
 
 		return STATUS_SUCCESS;
 	}
@@ -69,11 +82,11 @@ namespace driver {
 		return STATUS_SUCCESS;
 	}
 
-	NTSTATUS attach(Process& process, Request* request) {
+	NTSTATUS attach(Process& process, RequestAttach* request) {
 		if (process.Attached())
 			unattach(process);
 
-		const PWCHAR process_name = static_cast<PWCHAR>(request->buffer);
+		const PWCHAR process_name = request->process_name;
 
 		if (DEBUG_ATTACH)
 			debug("[+] Attaching to process: %ws\n", process_name);
@@ -97,7 +110,7 @@ namespace driver {
 		return status;
 	}
 
-	NTSTATUS process_is_alive(Process& process, Request* request) {
+	NTSTATUS process_is_alive(Process& process, RequestIsProcessAlive* request) {
 		if (DEBUG_TARGET_ALIVE)
 			debug("[+] Checking if target process is alive.\n");
 
@@ -106,22 +119,22 @@ namespace driver {
 			if (DEBUG_TARGET_ALIVE)
 				debug("[-] Not attached to a process.\n");
 
-			request->return_value = false;
+			request->is_alive = false;
 
 			return STATUS_INVALID_PARAMETER;
 		}
 
-		request->return_value = process.is_alive();
+		request->is_alive = process.is_alive();
 
 		if (DEBUG_TARGET_ALIVE)
-			debug("[+] Target process is %s.\n", request->return_value ? "alive" : "dead");
+			debug("[+] Target process is %s.\n", request->is_alive ? "alive" : "dead");
 
 		return STATUS_SUCCESS;
 	}
 
-	NTSTATUS read_memory(Process& process, Request* request) {
-		PVOID destination = request->buffer;
-		PVOID source = request->address;
+	NTSTATUS read_memory(Process& process, RequestReadMemory* request) {
+		PVOID destination = request->destination;
+		PVOID source = request->source;
 		SIZE_T size = request->size;
 		PSIZE_T return_size = &request->return_size;
 
@@ -145,9 +158,9 @@ namespace driver {
 		return status;
 	}
 
-	NTSTATUS write_memory(Process& process, Request* request) {
-		PVOID destination = request->address;
-		PVOID source = request->buffer;
+	NTSTATUS write_memory(Process& process, RequestWriteMemory* request) {
+		PVOID destination = request->destination;
+		PVOID source = request->source;
 		SIZE_T size = request->size;
 		PSIZE_T return_size = &request->return_size;
 
@@ -171,11 +184,8 @@ namespace driver {
 		return status;
 	}
 
-	NTSTATUS get_module(Process& process, Request* request) {
-		PVOID module_name = request->buffer;
-		uintptr_t& address = request->return_value;;
-
-		return findModuleBaseAddress(process, reinterpret_cast<PWCHAR>(module_name), address);
+	NTSTATUS get_module_base(Process& process, RequestGetModuleBase* request) {
+		return findModuleBaseAddress(process, request->module_name, request->module_base);
 	}
 
 
@@ -191,7 +201,7 @@ namespace driver {
 		// Get request packet from irp
 		PIO_STACK_LOCATION stack_irp = IoGetCurrentIrpStackLocation(irp);
 
-		Request* request = reinterpret_cast<Request*>(irp->AssociatedIrp.SystemBuffer);
+		PVOID request = irp->AssociatedIrp.SystemBuffer;
 
 		if (stack_irp == nullptr || request == nullptr)
 		{
@@ -201,37 +211,45 @@ namespace driver {
 
 		// --------------------------------------------------------------------------------
 		NTSTATUS status = STATUS_UNSUCCESSFUL;
+		// The value of this variable is set in the CHECK_REQUEST_SIZE macro.
+		size_t request_size = 0;
 
-		const auto control_code = stack_irp->Parameters.DeviceIoControl.IoControlCode;
+		const auto request_data = stack_irp->Parameters.DeviceIoControl;
 
 		if (DEBUG_DEV_CTRL)
-			debug("[+]     Control code: %u\n", control_code);
+			debug("[+]     Control code: %u\n", request_data.IoControlCode);
 
-		switch (control_code)
+		switch (request_data.IoControlCode)
 		{
 			//
 			// Driver state
 		case ioctl_codes::verify_connection:
+			CHECK_REQUEST_SIZE(request_data, RequestVerifyConnection, DEBUG_DEV_CTRL);
 			status = STATUS_SUCCESS;
 			break;
 		case ioctl_codes::attach:
-			status = attach(target_process, request);
+			CHECK_REQUEST_SIZE(request_data, RequestAttach, DEBUG_ATTACH);
+			status = attach(target_process, (RequestAttach*)request);
 			break;
 		case ioctl_codes::unattach:
+			CHECK_REQUEST_SIZE(request_data, RequestUnattach, DEBUG_UNATTACH);
 			status = unattach(target_process);
 			break;
 			//
 			// Target state
 		case ioctl_codes::is_target_alive:
-			status = process_is_alive(target_process, request);
+			CHECK_REQUEST_SIZE(request_data, RequestIsProcessAlive, DEBUG_TARGET_ALIVE);
+			status = process_is_alive(target_process, (RequestIsProcessAlive*)request);
 			break;
 			//
 			// IO
 		case ioctl_codes::read_memory:
-			status = read_memory(target_process, request);
+			CHECK_REQUEST_SIZE(request_data, RequestReadMemory, DEBUG_READ);
+			status = read_memory(target_process, (RequestReadMemory*)request);
 			break;
 		case ioctl_codes::write_memory:
-			status = write_memory(target_process, request);
+			CHECK_REQUEST_SIZE(request_data, RequestWriteMemory, DEBUG_WRITE);
+			status = write_memory(target_process, (RequestWriteMemory*)request);
 			break;
 			//
 			// Memory
@@ -253,22 +271,24 @@ namespace driver {
 			//
 			// Modules
 		case ioctl_codes::get_module_base:
-			status = get_module(target_process, request);
+			CHECK_REQUEST_SIZE(request_data, RequestGetModuleBase, DEBUG_GET_MODULE);
+			status = get_module_base(target_process, (RequestGetModuleBase*)request);
 			break;
 		case ioctl_codes::enumerate_modules:
 			debug("[-] Module enumeration not implemented.\n");
 			status = STATUS_NOT_IMPLEMENTED;
 			break;
 		case ioctl_codes::set_debug_flags:
-			status = set_debug_flags(request);
+			CHECK_REQUEST_SIZE(request_data, RequestSetDebugFlags, DEBUG_SET_DEBUG_FLAGS);
+			status = set_debug_flags((RequestSetDebugFlags*)request);
 			break;
 		default:
-			debug("[-] Unknown control code: %x\n", control_code);
+			debug("[-] Unknown control code: %x\n", request_data.IoControlCode);
 			break;
 		}
 
 		irp->IoStatus.Status = status;
-		irp->IoStatus.Information = sizeof(Request);
+		irp->IoStatus.Information = request_size;
 
 		IoCompleteRequest(irp, IO_NO_INCREMENT);
 
