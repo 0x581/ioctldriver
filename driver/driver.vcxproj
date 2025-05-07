@@ -97,6 +97,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <AdditionalIncludeDirectories>$(ProjectDir)includes\;$(ProjectDir)kdebug\;$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EntryPointSymbol>DriverEntry</EntryPointSymbol>
@@ -155,9 +156,9 @@
     <ClCompile Include="process\src\virtual_to_physical.cpp" />
     <ClCompile Include="process\src\get_process.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="driver_api\driver_dll.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="includes\driver_defines.h" />
     <ClInclude Include="includes\ioctl_codes.h" />
     <ClInclude Include="includes\requests.h" />
     <ClInclude Include="kdebug\debug_flags.h" />
@@ -171,7 +172,6 @@
     <ClInclude Include="process\includes\process_struct.h" />
     <ClInclude Include="process\includes\virtual_to_physical.h" />
     <ClInclude Include="process\process.h" />
-    <ClInclude Include="driver_api\driver_api.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

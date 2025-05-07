@@ -48,9 +48,6 @@
     <ClCompile Include="kdebug\kdebug.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="driver_api\driver_dll.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="kdebug\event.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -83,9 +80,6 @@
     <ClInclude Include="process\includes\virtual_to_physical.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="driver_api\driver_api.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="kdebug\event.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -96,6 +90,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="includes\requests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="includes\driver_defines.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

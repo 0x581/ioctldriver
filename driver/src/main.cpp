@@ -6,6 +6,7 @@
 #include "kdebug.h"
 #include "event.h"
 
+#include "driver_defines.h"
 #include "ioctl_codes.h"
 #include "requests.h"
 
@@ -279,10 +280,10 @@ NTSTATUS driver_main(PDRIVER_OBJECT driver_object, PUNICODE_STRING registry_path
 	UNREFERENCED_PARAMETER(registry_path);
 
 	UNICODE_STRING device_name = {};
-	RtlInitUnicodeString(&device_name, L"\\Device\\AssPileDriver");
+	RtlInitUnicodeString(&device_name, device_name_w);
 
 	PDEVICE_OBJECT device_object = nullptr;
-	NTSTATUS status = IoCreateDevice(driver_object, 0, &device_name, FILE_DEVICE_UNKNOWN,
+	NTSTATUS status = IoCreateDevice(driver_object, 0, &device_name, DRIVER_FILE_DEVICE,
 		FILE_DEVICE_SECURE_OPEN, FALSE, &device_object);
 
 	if (!NT_SUCCESS(status))
@@ -295,22 +296,6 @@ NTSTATUS driver_main(PDRIVER_OBJECT driver_object, PUNICODE_STRING registry_path
 
 	debug("[+] Driver device successfully created.\n");
 
-	UNICODE_STRING symbolic_link = {};
-	RtlInitUnicodeString(&symbolic_link, L"\\DosDevices\\AssPileDriver");
-
-	status = IoCreateSymbolicLink(&symbolic_link, &device_name);
-	if (!NT_SUCCESS(status))
-	{
-		WriteToEventLog(
-			driver_object, 0xC0000002, status, L"Failed to create symbolic link.");
-		debug("[-] Failed to establish symbolic link\n");
-
-		IoDeleteDevice(device_object);
-
-		return status;
-	}
-
-	debug("[+] Driver symbolic link successfully established.\n");
 	SetFlag(device_object->Flags, DO_BUFFERED_IO);
 
 	driver_object->MajorFunction[IRP_MJ_CREATE] = driver::create;
