@@ -16,7 +16,7 @@ namespace apd {
 
 	bool unattach_from_process(HANDLE driver_handle);
 
-	bool process_is_alive(HANDLE driver_handle);
+	bool is_process_alive(HANDLE driver_handle);
 
 	uintptr_t get_module_base(HANDLE driver_handle, const wchar_t* module_name);
 

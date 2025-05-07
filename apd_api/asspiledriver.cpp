@@ -43,7 +43,7 @@ namespace apd {
 		return DeviceIoControl(driver_handle, ioctl_codes::unattach, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 	}
 
-	bool process_is_alive(HANDLE driver_handle) {
+	bool is_process_alive(HANDLE driver_handle) {
 		Request r{ 0 };
 		const BOOL status = DeviceIoControl(driver_handle, ioctl_codes::is_target_alive, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 
