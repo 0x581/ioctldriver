@@ -155,6 +155,13 @@
     <ClCompile Include="process\src\process_struct.cpp" />
     <ClCompile Include="process\src\virtual_to_physical.cpp" />
     <ClCompile Include="process\src\get_process.cpp" />
+    <ClCompile Include="src\driver_functions\attach.cpp" />
+    <ClCompile Include="src\driver_functions\detach.cpp" />
+    <ClCompile Include="src\driver_functions\get_module_base.cpp" />
+    <ClCompile Include="src\driver_functions\is_process_alive.cpp" />
+    <ClCompile Include="src\driver_functions\read_memory.cpp" />
+    <ClCompile Include="src\driver_functions\set_debug_flags.cpp" />
+    <ClCompile Include="src\driver_functions\write_memory.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -172,6 +179,7 @@
     <ClInclude Include="process\includes\process_struct.h" />
     <ClInclude Include="process\includes\virtual_to_physical.h" />
     <ClInclude Include="process\process.h" />
+    <ClInclude Include="src\driver_functions\driver_functions.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

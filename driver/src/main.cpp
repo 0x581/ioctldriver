@@ -12,14 +12,11 @@
 
 #include "../process/process.h"
 
+#include "driver_functions/driver_functions.h"
+
 extern "C" {
 	NTKERNELAPI NTSTATUS IoCreateDriver(PUNICODE_STRING DriverName,
 		PDRIVER_INITIALIZE InitializationFunction);
-
-	NTKERNELAPI NTSTATUS MmCopyVirtualMemory(PEPROCESS SourceProcess, PVOID SourceAddress,
-		PEPROCESS TargetProcess, PVOID TargetAddress,
-		SIZE_T BufferSize, KPROCESSOR_MODE PreviousMode,
-		PSIZE_T ReturnSize);
 }
 
 #define CHECK_REQUEST_SIZE(request_data, Request, DEBUG_FLAG) \
@@ -50,142 +47,6 @@ namespace driver {
 		IoCompleteRequest(irp, IO_NO_INCREMENT);
 
 		return irp->IoStatus.Status;
-	}
-
-	NTSTATUS set_debug_flags(RequestSetDebugFlags* request) {
-		request->old_flags = DEBUG_FLAGS.raw;
-
-		DEBUG_FLAGS.raw = request->new_flags;
-
-		if (DEBUG_SET_DEBUG_FLAGS)
-			debug("[+] Debug flags updated from %p to %p.\n", request->old_flags, DEBUG_FLAGS.raw);
-
-		return STATUS_SUCCESS;
-	}
-
-	NTSTATUS unattach(Process& process) {
-		if (DEBUG_UNATTACH)
-			debug("[+] Unattaching from process.\n");
-
-		if (!process.Attached())
-		{
-			if (DEBUG_UNATTACH)
-				debug("[-] Not attached to a process.\n");
-			return STATUS_INVALID_PARAMETER;
-		}
-
-		process.Clear();
-
-		if (DEBUG_UNATTACH)
-			debug("[+] Unattached from process.\n");
-
-		return STATUS_SUCCESS;
-	}
-
-	NTSTATUS attach(Process& process, RequestAttach* request) {
-		if (process.Attached())
-			unattach(process);
-
-		const PWCHAR process_name = request->process_name;
-
-		if (DEBUG_ATTACH)
-			debug("[+] Attaching to process: %ws\n", process_name);
-
-		PEPROCESS target_process = nullptr;
-		NTSTATUS status = findProcessByName(process_name, target_process);
-
-		if (NT_SUCCESS(status))
-			process.Connect(target_process);
-
-		request->pid = process.pid;
-
-		if (DEBUG_ATTACH)
-		{
-			if (NT_SUCCESS(status))
-				debug("[+] Attached to process: %ws (PID %d)\n", process_name, process.pid);
-			else
-				debug("[-] Failed to attach to process: %ws\n", process_name);
-		}
-
-		return status;
-	}
-
-	NTSTATUS process_is_alive(Process& process, RequestIsProcessAlive* request) {
-		if (DEBUG_TARGET_ALIVE)
-			debug("[+] Checking if target process is alive.\n");
-
-		if (!process.Attached())
-		{
-			if (DEBUG_TARGET_ALIVE)
-				debug("[-] Not attached to a process.\n");
-
-			request->is_alive = false;
-
-			return STATUS_INVALID_PARAMETER;
-		}
-
-		request->is_alive = process.is_alive();
-
-		if (DEBUG_TARGET_ALIVE)
-			debug("[+] Target process is %s.\n", request->is_alive ? "alive" : "dead");
-
-		return STATUS_SUCCESS;
-	}
-
-	NTSTATUS read_memory(Process& process, RequestReadMemory* request) {
-		PVOID destination = request->destination;
-		PVOID source = request->source;
-		SIZE_T size = request->size;
-		PSIZE_T return_size = &request->return_size;
-
-		if (DEBUG_READ)
-			debug("[+] Reading %d bytes from %p to %p.\n", size, source, destination);
-
-		if (!process.Attached())
-		{
-			if (DEBUG_READ)
-				debug("[-] Not attached to a procss.\n");
-
-			return STATUS_INVALID_PARAMETER;
-		}
-
-		const auto status = MmCopyVirtualMemory(process.eprocess, source, PsGetCurrentProcess(),
-			destination, size, KernelMode, return_size);
-
-		if (DEBUG_READ) if (!NT_SUCCESS(status))
-			debug("[-] Failed to read memory.\n");
-
-		return status;
-	}
-
-	NTSTATUS write_memory(Process& process, RequestWriteMemory* request) {
-		PVOID destination = request->destination;
-		PVOID source = request->source;
-		SIZE_T size = request->size;
-		PSIZE_T return_size = &request->return_size;
-
-		if (DEBUG_WRITE)
-			debug("[+] Writing %d bytes from %p to %p.\n", size, source, destination);
-
-		if (!process.Attached())
-		{
-			if (DEBUG_READ)
-				debug("[-] Not attached to a procss.\n");
-
-			return STATUS_INVALID_PARAMETER;
-		}
-
-		const auto status = MmCopyVirtualMemory(PsGetCurrentProcess(), source, process.eprocess,
-			destination, size, KernelMode, return_size);
-
-		if (DEBUG_WRITE) if (!NT_SUCCESS(status))
-			debug("[-] Failed to write memory.\n");
-
-		return status;
-	}
-
-	NTSTATUS get_module_base(Process& process, RequestGetModuleBase* request) {
-		return findModuleBaseAddress(process, request->module_name, request->module_base);
 	}
 
 
@@ -231,15 +92,15 @@ namespace driver {
 			CHECK_REQUEST_SIZE(request_data, RequestAttach, DEBUG_ATTACH);
 			status = attach(target_process, (RequestAttach*)request);
 			break;
-		case ioctl_codes::unattach:
+		case ioctl_codes::detach:
 			CHECK_REQUEST_SIZE(request_data, RequestUnattach, DEBUG_UNATTACH);
-			status = unattach(target_process);
+			status = detach(target_process);
 			break;
 			//
 			// Target state
-		case ioctl_codes::is_target_alive:
+		case ioctl_codes::is_process_alive:
 			CHECK_REQUEST_SIZE(request_data, RequestIsProcessAlive, DEBUG_TARGET_ALIVE);
-			status = process_is_alive(target_process, (RequestIsProcessAlive*)request);
+			status = is_process_alive(target_process, (RequestIsProcessAlive*)request);
 			break;
 			//
 			// IO

@@ -21,12 +21,12 @@ namespace ioctl_codes {
 	constexpr unsigned long attach =
 		CTL_CODE(DRIVER_FILE_DEVICE, 10, METHOD_BUFFERED, FILE_SPECIAL_ACCESS);
 
-	constexpr unsigned long unattach =
+	constexpr unsigned long detach =
 		CTL_CODE(DRIVER_FILE_DEVICE, 11, METHOD_BUFFERED, FILE_SPECIAL_ACCESS);
 
 	//
 	// Target state
-	constexpr unsigned long is_target_alive =
+	constexpr unsigned long is_process_alive =
 		CTL_CODE(DRIVER_FILE_DEVICE, 20, METHOD_BUFFERED, FILE_SPECIAL_ACCESS);
 
 	//

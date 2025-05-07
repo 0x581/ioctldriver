@@ -43,12 +43,12 @@ namespace apd {
 
 	bool unattach_from_process(HANDLE driver_handle) {
 		RequestUnattach r{};
-		return DeviceIoControl(driver_handle, ioctl_codes::unattach, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
+		return DeviceIoControl(driver_handle, ioctl_codes::detach, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 	}
 
 	bool is_process_alive(HANDLE driver_handle) {
 		RequestIsProcessAlive r{};
-		const BOOL status = DeviceIoControl(driver_handle, ioctl_codes::is_target_alive, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
+		const BOOL status = DeviceIoControl(driver_handle, ioctl_codes::is_process_alive, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 
 		return status && r.is_alive;
 	}
