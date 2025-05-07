@@ -33,12 +33,17 @@ namespace apd {
 		return DeviceIoControl(driver_handle, ioctl_codes::verify_connection, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 	}
 
-	bool attach_to_process(HANDLE driver_handle, const wchar_t* process_name) {
+	bool attach_to_process(HANDLE driver_handle, const wchar_t* process_name, HANDLE* pid) {
 		RequestAttach r{};
 		r.pid = 0;
 		wcsncpy_s(r.process_name, process_name, MAX_PATH + 1);
 
-		return DeviceIoControl(driver_handle, ioctl_codes::attach, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
+		const auto status = DeviceIoControl(driver_handle, ioctl_codes::attach, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
+
+		if (pid != nullptr)
+			*pid = r.pid;
+
+		return status;
 	}
 
 	bool detach_from_process(HANDLE driver_handle) {

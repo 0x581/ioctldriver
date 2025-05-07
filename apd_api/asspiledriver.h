@@ -11,7 +11,7 @@ namespace apd {
 
 	bool verify_connection(HANDLE driver_handle);
 
-	bool attach_to_process(HANDLE driver_handle, const wchar_t* process_name);
+	bool attach_to_process(HANDLE driver_handle, const wchar_t* process_name, HANDLE* pid = nullptr);
 
 	bool detach_from_process(HANDLE driver_handle);
 
