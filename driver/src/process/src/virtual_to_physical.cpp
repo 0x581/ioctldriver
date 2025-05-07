@@ -189,9 +189,7 @@ NTSTATUS ReadProcessMemory(Process& process, PVOID Address, PVOID AllocatedBuffe
 	return ReadProcessMemory(process.cr3, Address, AllocatedBuffer, size, read);
 }
 
-NTSTATUS WriteProcessMemory(Process& process, PVOID Address, PVOID AllocatedBuffer, size_t size, size_t* written) {
-	uintptr_t process_cr3 = process.cr3;
-
+NTSTATUS WriteProcessMemory(uintptr_t process_cr3, PVOID Address, PVOID AllocatedBuffer, size_t size, size_t* written) {
 	NTSTATUS status = STATUS_UNSUCCESSFUL;
 
 	size_t bytes_written = 0;
@@ -220,4 +218,8 @@ NTSTATUS WriteProcessMemory(Process& process, PVOID Address, PVOID AllocatedBuff
 
 	*written = bytes_written;
 	return status;
+}
+
+NTSTATUS WriteProcessMemory(Process& process, PVOID Address, PVOID AllocatedBuffer, size_t size, size_t* written) {
+	return WriteProcessMemory(process.cr3, Address, AllocatedBuffer, size, written);
 }

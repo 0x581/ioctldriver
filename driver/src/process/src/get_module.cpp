@@ -26,7 +26,8 @@ NTSTATUS findModuleBaseAddress(Process& process, PCWCHAR module_name, uintptr_t&
 	UNICODE_STRING module_name_unicode = { 0 };
 	RtlInitUnicodeString(&module_name_unicode, module_name);
 
-	uintptr_t ldrDataPtr = ReadProcessMemory<uintptr_t>(process, (uintptr_t)process.pPeb + pebLdrOffset);
+	uintptr_t ldrDataPtr = 0;
+	ReadProcessMemory(process, (char*)process.pPeb + pebLdrOffset, &ldrDataPtr, sizeof(ldrDataPtr), nullptr);
 
 	if (!ldrDataPtr)
 	{
@@ -38,13 +39,13 @@ NTSTATUS findModuleBaseAddress(Process& process, PCWCHAR module_name, uintptr_t&
 	const PLIST_ENTRY start_address = PLIST_ENTRY(ldrDataPtr + ldrInLoadOrderModuleListOffset);
 
 	LDR_DATA_TABLE_ENTRY entry = { 0 };
-	ReadProcessMemory(process, (PVOID)start_address, &entry, sizeof(PLIST_ENTRY));
+	ReadProcessMemory(process, start_address, &entry, sizeof(PLIST_ENTRY));
 
 	WCHAR buffer[MAX_PATH + 1] = { 0 };
 
 	do
 	{
-		entry = ReadProcessMemory<LDR_DATA_TABLE_ENTRY>(process, entry.InLoadOrderLinks.Flink);
+		ReadProcessMemory(process, entry.InLoadOrderLinks.Flink, &entry, sizeof(LDR_DATA_TABLE_ENTRY));
 
 		UNICODE_STRING current_module_name{
 			.Length = entry.BaseDllName.Length,

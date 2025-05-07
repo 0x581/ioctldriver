@@ -6,3 +6,5 @@
 
 #include "includes/get_module.h"
 #include "includes/get_process.h"
+
+#include "includes/virtual_to_physical.h"

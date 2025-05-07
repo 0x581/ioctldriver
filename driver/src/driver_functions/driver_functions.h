@@ -5,6 +5,10 @@
 
 #include <ntdef.h>
 
+#define USE_MANUAL_READ
+#define USE_MANUAL_WRITE
+
+
 NTSTATUS attach(Process& process, RequestAttach* request);
 NTSTATUS detach(Process& process);
 
