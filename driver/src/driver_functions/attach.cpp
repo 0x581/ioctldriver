@@ -6,13 +6,28 @@
 #include "../process/includes/get_process.h"
 
 
+static bool check_arguments(RequestAttach* request) {
+	const auto length = wcsnlen_s(request->process_name, sizeof(request->process_name) / sizeof(wchar_t));
+
+	if (length == 0 || length > MAX_PATH)
+		return false;
+
+	return true;
+}
+
 NTSTATUS attach(Process& process, RequestAttach* request) {
 	if (process.Attached())
 		detach(process);
 
+	if (!check_arguments(request))
+	{
+		if (DEBUG_ATTACH)
+			debug("[-] Invalid process name.\n");
+
+		return STATUS_INVALID_PARAMETER;
+	}
+
 	const PWCHAR process_name = request->process_name;
-
-
 
 	if (DEBUG_ATTACH)
 		debug("[+] Attaching to process: %ws\n", process_name);
