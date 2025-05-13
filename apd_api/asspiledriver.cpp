@@ -66,9 +66,9 @@ namespace apd {
 		r.module_base = 0;
 		wcsncpy_s(r.module_name, module_name, MAX_PATH + 1);
 
-		DeviceIoControl(driver_handle, ioctl_codes::get_module_base, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
+		const BOOL status = DeviceIoControl(driver_handle, ioctl_codes::get_module_base, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 
-		return r.module_base;
+		return status ? r.module_base : -1;
 	}
 
 	DriverFlags set_debug_flags(HANDLE driver_handle, const DriverFlags new_flags) {
@@ -76,9 +76,9 @@ namespace apd {
 		r.old_flags = 0;
 		r.new_flags = new_flags;
 
-		DeviceIoControl(driver_handle, ioctl_codes::set_debug_flags, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
+		const BOOL status = DeviceIoControl(driver_handle, ioctl_codes::set_debug_flags, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 
-		return r.old_flags;
+		return status ? r.old_flags : -1;
 	}
 
 	size_t read_memory(HANDLE driver_handle, const uintptr_t addr, void* buffer, const size_t size) {
@@ -87,9 +87,9 @@ namespace apd {
 		r.destination = buffer;
 		r.size = size;
 
-		DeviceIoControl(driver_handle, ioctl_codes::read_memory, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
+		const BOOL status = DeviceIoControl(driver_handle, ioctl_codes::read_memory, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 
-		return r.return_size;
+		return status ? r.return_size : -1;
 	}
 
 	size_t write_memory(HANDLE driver_handle, const uintptr_t addr, void* buffer, const size_t size) {
@@ -98,8 +98,8 @@ namespace apd {
 		r.source = buffer;
 		r.size = size;
 
-		DeviceIoControl(driver_handle, ioctl_codes::write_memory, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
+		const BOOL status = DeviceIoControl(driver_handle, ioctl_codes::write_memory, &r, sizeof(r), &r, sizeof(r), nullptr, nullptr);
 
-		return r.return_size;
+		return status ? r.return_size : -1;
 	}
 }
