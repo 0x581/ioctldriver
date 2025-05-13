@@ -71,47 +71,36 @@ int main() {
 	HANDLE driver_handle = apd::open_driver();
 	if (driver_handle == INVALID_HANDLE_VALUE)
 	{
-		DWORD error = GetLastError();
-		std::wcerr << L"Failed to open device. Error: " << error << std::endl;
+		std::wcerr << L"Failed to open device. Error: " << GetLastError() << std::endl;
 		std::cin.get();
 		return 1;
 	}
 
-	connected = apd::verify_connection(driver_handle);
-	if (!connected)
-		CLEANUP_AND_EXIT(1, L"Driver connection failed.");
 
-	bool success = apd::attach_to_process(driver_handle, L"Notsnjfg lajbsgfölajepad.exe");
-	if (success)
-		CLEANUP_AND_EXIT(1, L"Attached to invalid process.");
+	apd::set_debug_flags(driver_handle, 0xFFFFFFFFFFFFFFFF);
 
-	success = apd::attach_to_process(driver_handle, L"Notepad.exe");
+	size_t* value = new size_t;
+
+	*value = 6969;
+
+	bool success;
+
+	success = apd::attach_to_process(driver_handle, L"um.exe");
 	if (!success)
 		CLEANUP_AND_EXIT(1, L"Failed to attach to process.");
 
-	const uintptr_t module_base = apd::get_module_base(driver_handle, L"Notepad.exe");
-	if (module_base == 0)
-		CLEANUP_AND_EXIT(1, L"Failed to get module base.");
 
-	const uintptr_t module_base_2 = apd::get_module_base(driver_handle, L"Ndfasaaotepad.exe");
-	if (module_base_2 != 0)
-		CLEANUP_AND_EXIT(1, L"Found invalid module.");
-
-	auto is_alive = apd::is_process_alive(driver_handle);
-	if (!is_alive)
-		CLEANUP_AND_EXIT(1, L"Process is not alive.");
-
-	auto old_flags = apd::set_debug_flags(driver_handle, 0x0);
-
-	apd::verify_connection(driver_handle);
+	size_t new_value = 420;
 
 
+	std::cout << "Old value: " << std::hex << *value << std::endl;
 
-	std::wcout << L"Module base: " << std::hex << module_base << std::endl;
+	const auto written = apd::write_memory(driver_handle, (uintptr_t)value, &new_value, sizeof(size_t));
 
-	const uintptr_t address = module_base + 0x123456;
+	std::cout << "Wrote " << written << " bytes to address: " << std::hex << value << std::endl;
+	std::cout << "New value: " << std::hex << *value << std::endl;
 
-	TIME_FUNCTION(test_read_memory(driver_handle, 0, 64, 1000000));
+
 
 	success = apd::detach_from_process(driver_handle);
 

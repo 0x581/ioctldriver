@@ -31,7 +31,7 @@ NTSTATUS write_memory(Process& process, RequestWriteMemory* request) {
 	}
 
 #ifdef USE_MANUAL_WRITE
-	const auto status = WriteProcessMemory(process.cr3, source, destination, size, return_size);
+	const auto status = WriteProcessMemory(process.cr3, destination, source, size, return_size);
 #else
 	const auto status = MmCopyVirtualMemory(PsGetCurrentProcess(), source, process.eprocess,
 		destination, size, KernelMode, return_size);

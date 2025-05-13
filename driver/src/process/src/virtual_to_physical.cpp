@@ -189,22 +189,25 @@ NTSTATUS ReadProcessMemory(Process& process, PVOID Address, PVOID AllocatedBuffe
 	return ReadProcessMemory(process.cr3, Address, AllocatedBuffer, size, read);
 }
 
-NTSTATUS WriteProcessMemory(uintptr_t process_cr3, PVOID Address, PVOID AllocatedBuffer, size_t size, size_t* written) {
+NTSTATUS WriteProcessMemory(uintptr_t process_cr3, PVOID destination, PVOID source, size_t size, size_t* written) {
 	NTSTATUS status = STATUS_UNSUCCESSFUL;
 
 	size_t bytes_written = 0;
 	size_t remaining_size = size;
 	while (remaining_size)
 	{
-		uintptr_t CurPhysAddr = TranslateLinearAddress(process_cr3, (ULONG64)Address + bytes_written);
+		uintptr_t CurPhysAddr = TranslateLinearAddress(process_cr3, (ULONG64)destination + bytes_written);
 
 		if (!CurPhysAddr)
-			return STATUS_UNSUCCESSFUL;
+		{
+			status = STATUS_UNSUCCESSFUL;
+			break;
+		}
 
 		size_t WriteSize = min(PAGE_SIZE - (CurPhysAddr & 0xFFF), remaining_size);
 		size_t BytesWritten = 0;
 
-		status = WritePhysicalAddress(CurPhysAddr, (PVOID)((uintptr_t)AllocatedBuffer + bytes_written), WriteSize, &BytesWritten);
+		status = WritePhysicalAddress(CurPhysAddr, (PVOID)((uintptr_t)source + bytes_written), WriteSize, &BytesWritten);
 
 		remaining_size -= BytesWritten;
 		bytes_written += BytesWritten;
@@ -220,6 +223,6 @@ NTSTATUS WriteProcessMemory(uintptr_t process_cr3, PVOID Address, PVOID Allocate
 	return status;
 }
 
-NTSTATUS WriteProcessMemory(Process& process, PVOID Address, PVOID AllocatedBuffer, size_t size, size_t* written) {
-	return WriteProcessMemory(process.cr3, Address, AllocatedBuffer, size, written);
+NTSTATUS WriteProcessMemory(Process& process, PVOID destination, PVOID source, size_t size, size_t* written) {
+	return WriteProcessMemory(process.cr3, destination, source, size, written);
 }

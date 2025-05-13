@@ -8,6 +8,6 @@ NTSTATUS ReadProcessMemory(uintptr_t process_cr3, PVOID Address, PVOID Allocated
 
 NTSTATUS ReadProcessMemory(Process& process, PVOID Address, PVOID AllocatedBuffer, size_t size, size_t* read = nullptr);
 
-NTSTATUS WriteProcessMemory(uintptr_t process_cr3, PVOID Address, PVOID AllocatedBuffer, size_t size, size_t* written = nullptr);
+NTSTATUS WriteProcessMemory(uintptr_t process_cr3, PVOID destination, PVOID source, size_t size, size_t* written = nullptr);
 
-NTSTATUS WriteProcessMemory(Process& process, PVOID Address, PVOID AllocatedBuffer, size_t size, size_t* written = nullptr);
+NTSTATUS WriteProcessMemory(Process& process, PVOID destination, PVOID source, size_t size, size_t* written = nullptr);
