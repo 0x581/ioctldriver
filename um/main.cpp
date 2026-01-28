@@ -93,12 +93,12 @@ int main() {
 	size_t new_value = 420;
 
 
-	std::cout << "Old value: " << std::hex << *value << std::endl;
+	std::cout << "Old value: " << *value << std::endl;
 
 	const auto written = apd::write_memory(driver_handle, (uintptr_t)value, &new_value, sizeof(size_t));
 
-	std::cout << "Wrote " << written << " bytes to address: " << std::hex << value << std::endl;
-	std::cout << "New value: " << std::hex << *value << std::endl;
+	std::cout << "Wrote " << written << " bytes to address: " << std::hex << value << std::dec << std::endl;
+	std::cout << "New value: " << *value << std::endl;
 
 
 
