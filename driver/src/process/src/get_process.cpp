@@ -6,7 +6,8 @@
 
 #include "kdebug.h"
 
-void GetBasePathUnicodeString(PUNICODE_STRING full_path, PUNICODE_STRING base_path) {
+void GetBasePathUnicodeString(PUNICODE_STRING full_path, PUNICODE_STRING base_path)
+{
 	USHORT length = full_path->Length / sizeof(WCHAR);
 	PWCH buffer = full_path->Buffer;
 
@@ -32,8 +33,9 @@ void GetBasePathUnicodeString(PUNICODE_STRING full_path, PUNICODE_STRING base_pa
 	base_path->Buffer = base_buffer_start;
 }
 
-NTSTATUS findProcessByName(const PWCHAR process_name, PEPROCESS& peprocess_out) {
-	UNICODE_STRING process_name_unicode = { 0 };
+NTSTATUS findProcessByName(const PWCHAR process_name, PEPROCESS &peprocess_out)
+{
+	UNICODE_STRING process_name_unicode = {0};
 	RtlInitUnicodeString(&process_name_unicode, process_name);
 
 	if (DEBUG_GET_PROCESS)
@@ -48,18 +50,15 @@ NTSTATUS findProcessByName(const PWCHAR process_name, PEPROCESS& peprocess_out) 
 		debug("[ ]   Start address: 0x%p\n", start_address);
 
 	for (PLIST_ENTRY entry = start_address;
-		entry != nullptr && entry->Flink != start_address;
-		entry = entry->Flink
-		)
+		 entry != nullptr && entry->Flink != start_address;
+		 entry = entry->Flink)
 	{
 		PEPROCESS pEprocess = (PEPROCESS)((uintptr_t)entry - activeProcessLinksOffset);
-
 
 		if (DEBUG_GET_PROCESS)
 			debug("[ ]   Checking eprocess at 0x%p\n", pEprocess);
 
-
-		PFILE_OBJECT file_object = *(PFILE_OBJECT*)((uintptr_t)pEprocess + imageFilePtrOffset);
+		PFILE_OBJECT file_object = *(PFILE_OBJECT *)((uintptr_t)pEprocess + imageFilePtrOffset);
 
 		if (file_object == nullptr)
 		{
@@ -72,7 +71,7 @@ NTSTATUS findProcessByName(const PWCHAR process_name, PEPROCESS& peprocess_out) 
 		if (DEBUG_GET_PROCESS)
 			debug("[ ]   Getting file name of process at 0x%p\n", file_object);
 
-		UNICODE_STRING base_path = { 0 };
+		UNICODE_STRING base_path = {0};
 		GetBasePathUnicodeString(&file_object->FileName, &base_path);
 
 		if (DEBUG_GET_PROCESS)
@@ -80,6 +79,16 @@ NTSTATUS findProcessByName(const PWCHAR process_name, PEPROCESS& peprocess_out) 
 
 		if (RtlEqualUnicodeString(&base_path, &process_name_unicode, TRUE))
 		{
+			// Check if the process is being closed
+			PLONG exit_status = processGetExitStatusAddress(pEprocess);
+			if (exit_status != nullptr && *exit_status != STATUS_PENDING)
+			{
+				if (DEBUG_GET_PROCESS)
+					debug("[~]   Process %wZ is being closed (exit status: 0x%X), skipping.\n", &process_name_unicode, *exit_status);
+
+				continue;
+			}
+
 			ObReferenceObject(pEprocess);
 
 			peprocess_out = pEprocess;
