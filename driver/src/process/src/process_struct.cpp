@@ -13,13 +13,16 @@ Process::Process() :
 	cr3{ 0 },
 	exit_status{ nullptr },
 	process_section_base_address{ 0 },
-	pPeb{ nullptr } {}
+	pPeb{ nullptr }
+{}
 
-bool Process::Attached() const {
+bool Process::Attached() const
+{
 	return eprocess != nullptr;
 }
 
-void Process::Connect(PEPROCESS target_process) {
+void Process::Connect(PEPROCESS target_process)
+{
 	if (this->Attached())
 		this->Clear();
 
@@ -33,11 +36,20 @@ void Process::Connect(PEPROCESS target_process) {
 		return;
 	}
 
+	const PLONG p_exit_status = processGetExitStatusAddress(target_process);
+	if (p_exit_status == nullptr || *p_exit_status != STATUS_PENDING)
+	{
+		if (DEBUG_PROCESS_STRUCT)
+			debug("[-] Target process is closing.\n");
+		return;
+	}
+
+
 	this->eprocess = target_process;
 	this->pid = processGetPid(this->eprocess);
 
 	this->cr3 = processGetCr3(this->eprocess);
-	this->exit_status = processGetExitStatusAddress(this->eprocess);
+	this->exit_status = exit_status;
 
 	this->process_section_base_address = processGetBaseAddress(this->eprocess);
 	this->pPeb = processGetPebPtr(this->eprocess);
@@ -58,7 +70,8 @@ void Process::Connect(PEPROCESS target_process) {
 		);
 }
 
-void Process::Clear() {
+void Process::Clear()
+{
 	if (DEBUG_DETACH)
 		debug("[+] Clearing process data.\n");
 
@@ -75,7 +88,8 @@ void Process::Clear() {
 	this->process_section_base_address = 0;
 }
 
-bool Process::is_alive() const {
+bool Process::is_alive() const
+{
 	if (!this->Attached())
 		return false;
 

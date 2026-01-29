@@ -6,7 +6,8 @@
 #include "../process/includes/get_process.h"
 
 
-static bool check_arguments(RequestAttach* request) {
+static bool check_arguments(RequestAttach* request)
+{
 	const auto length = wcsnlen_s(request->process_name, sizeof(request->process_name) / sizeof(wchar_t));
 
 	if (length == 0 || length > MAX_PATH)
@@ -15,7 +16,8 @@ static bool check_arguments(RequestAttach* request) {
 	return true;
 }
 
-NTSTATUS attach(Process& process, RequestAttach* request) {
+NTSTATUS attach(Process& process, RequestAttach* request)
+{
 	if (process.Attached())
 		detach(process);
 
@@ -36,7 +38,15 @@ NTSTATUS attach(Process& process, RequestAttach* request) {
 	NTSTATUS status = findProcessByName(process_name, target_process);
 
 	if (NT_SUCCESS(status))
+	{
 		process.Connect(target_process);
+
+		if (!process.Attached())
+		{
+			ObDereferenceObject(target_process);
+			status = STATUS_UNSUCCESSFUL;
+		}
+	}
 
 	request->pid = process.pid;
 
