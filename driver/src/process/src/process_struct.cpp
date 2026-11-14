@@ -49,7 +49,7 @@ void Process::Connect(PEPROCESS target_process)
 	this->pid = processGetPid(this->eprocess);
 
 	this->cr3 = processGetCr3(this->eprocess);
-	this->exit_status = exit_status;
+	this->exit_status = p_exit_status;
 
 	this->process_section_base_address = processGetBaseAddress(this->eprocess);
 	this->pPeb = processGetPebPtr(this->eprocess);

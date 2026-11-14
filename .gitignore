@@ -3,7 +3,12 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
-build
+# Build output and intermediates
+[Bb]uild/
+build/
+*.cer
+*.cat
+VM Shared/
 
 # User-specific files
 *.rsuser
